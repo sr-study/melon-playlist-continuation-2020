@@ -58,7 +58,7 @@ class GenreMostPopular:
 
                     for artist in cur_artists:
                         if artist in my_artists_counter:
-                            song_weights[song] += (weight[i] / 4) * (my_artists_counter[artist])/(sum(my_artists_counter.values()))
+                            song_weights[song] += weight[i]  * (my_artists_counter[artist])/(sum(my_artists_counter.values()))
                             break
 
 
@@ -70,7 +70,7 @@ class GenreMostPopular:
                             matched_num += my_genres_counter[genre]
                     if matched_num:
                         #w = int((matched_num / tot_num)*(weight[i] // 2))
-                        song_weights[song] += ( matched_num/ (sum(my_genres_counter.values())))*(weight[i] / 5)
+                        song_weights[song] +=  matched_num/ (sum(my_genres_counter.values()))*weight[i]
 
         song_weights_sorted = song_weights.most_common()
 
@@ -130,9 +130,19 @@ class GenreMostPopular:
 
         answers = []
 
+
+
         for q in tqdm(questions):
             my_songs = q['songs']
             my_tags = q['tags']
+
+            tag_only =False
+            if  len(my_songs)==0 and len(my_tags)!=0:
+                tag_only =True
+
+
+
+
             my_title = q['plylst_title'].split(' ')
             my_artists_counter = Counter()
             my_genres_counter = Counter()
@@ -150,18 +160,19 @@ class GenreMostPopular:
                 intersect_num = 0
                 for song in my_songs:
                     if song in song_set:
-                        intersect_num += 8
+                        intersect_num += 10
 
                 for tag_q in my_tags:
-                    chk = False
-                    for tag_t in tag_sets[idx]:
-                        ## == 에서 in 으로 바꿔었다가 다시 == 으로 바꾸었다.
 
+                    for tag_t in tag_sets[idx]:
                         if tag_q in tag_t or tag_t in tag_q:
                             if tag_t ==tag_q:
                                 intersect_num += 6
+                                if tag_only:
+                                    break
                             else:
-                                intersect_num += 3
+                                if not tag_only:
+                                    intersect_num += 2
 
                 for word in my_title:
                     if word in title_lists[idx]:
