@@ -82,6 +82,7 @@ Tag nDCG: 0.544005
 Music nDCG: 0.000511157
 Tag nDCG: 0.0648282
 
+이후 실험은 모두 실험 1 코드 위에 했다. 그러므로 실험 1 은 자동 반영
 
 
 ## 실험 2
@@ -118,7 +119,7 @@ Tag nDCG: 0.055223
 
 ##  실험 3
 
-실험 1 코드 위에 했다. 그러므로 실험 1 은 자동 반영
+
 
 제목을 끼얹어 보자
 
@@ -146,12 +147,32 @@ Music nDCG: 0.0823252
 Tag nDCG: 0.255488
 
 
-태그는 말도안되게높아졌는데 Music 은 박살남.  title only case에서 tag score가 인상적으로 높다. 
+태그는 말도안되게높아졌는데 Music 은 박살남.  title only case에서 tag score가 인상적으로 높다. 또한 tag만 있는것보다 music 점수가 높다.
 
+ song만 있는것에서 점수가 낮아졌는데, 오히려 title이 songs만 있는 case에서 유사도에 노이즈를 준다.
 
 
 
 
 ### 실험 5
 
-music이 박살났다는건 안 유사한데 유사하다고 해서 그렇다. 
+
+실험 3에서 tag_q in tag_t 일때 1개라도 같던가 유사하면 6점주고 뻇는데, tag  갯수별로 2점씩 주는걸로 바꾸었다.
+
+
+#### Total score
+Music nDCG: 0.225211
+Tag nDCG: 0.442562
+Score: 0.257814
+#### song + tag
+Music nDCG: 0.241467
+Tag nDCG: 0.426395
+#### tag
+Music nDCG: 0.0375836
+Tag nDCG: 0.312034
+#### song
+Music nDCG: 0.295177
+Tag nDCG: 0.529474
+#### x (title only)
+Music nDCG: 0.0823252
+Tag nDCG: 0.259639

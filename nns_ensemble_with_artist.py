@@ -156,11 +156,9 @@ class GenreMostPopular:
                     chk = False
                     for tag_t in tag_sets[idx]:
                         ## == 에서 in 으로 바꿔었다가 다시 == 으로 바꾸었다.
-                        if tag_q == tag_t:
-                            chk = True
-                            break
-                    if chk:
-                        intersect_num += 6
+
+                        if tag_q in tag_t or tag_t in tag_q:
+                            intersect_num += 3
 
                 for word in my_title:
                     if word in title_lists[idx]:
