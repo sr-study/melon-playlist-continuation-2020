@@ -110,9 +110,9 @@ class ArenaEvaluator:
             print(f"Tag nDCG: {tag_ndcg:.6}")
             print(f"Score: {score:.6}")
 
-            case_titles =['song + tag','tag','song','x']
+            case_titles =['song + tag','tag','song','x (title only)']
             for idx , case_title in enumerate(case_titles):
-                print(case_title)
+                print(f'#### {case_title}')
                 print(f"Music nDCG: {case_music[idx]:.6}")
                 print(f"Tag nDCG: {case_tag[idx]:.6}")
 
