@@ -150,7 +150,7 @@ class GenreMostPopular:
                 intersect_num = 0
                 for song in my_songs:
                     if song in song_set:
-                        intersect_num += 4
+                        intersect_num += 8
 
                 for tag_q in my_tags:
                     chk = False
@@ -158,7 +158,10 @@ class GenreMostPopular:
                         ## == 에서 in 으로 바꿔었다가 다시 == 으로 바꾸었다.
 
                         if tag_q in tag_t or tag_t in tag_q:
-                            intersect_num += 3
+                            if tag_t ==tag_q:
+                                intersect_num += 6
+                            else:
+                                intersect_num += 3
 
                 for word in my_title:
                     if word in title_lists[idx]:
