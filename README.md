@@ -65,23 +65,6 @@ ex)
 
 소장르도 비슷한 방법으로 바꿈
 
-### Total score
-Music nDCG: 0.233764
-Tag nDCG: 0.457979
-Score: 0.267396
-### song + tag
-Music nDCG: 0.253778
-Tag nDCG: 0.428884
-### tag
-Music nDCG: 0.0178572
-Tag nDCG: 0.464202
-### song
-Music nDCG: 0.323833
-Tag nDCG: 0.544005
-### x(title only)
-Music nDCG: 0.000511157
-Tag nDCG: 0.0648282
-
 이후 실험은 모두 실험 1 코드 위에 했다. 그러므로 실험 1 은 자동 반영
 
 
@@ -92,60 +75,14 @@ Tag nDCG: 0.0648282
 단어가 완전 똑같은게 아니라 유사하게 들어있으면 점수를 주겠다는 아이디어 
 
 
-### Total score
-Music nDCG: 0.234814
-Tag nDCG: 0.445503
-Score: 0.266417
-
-
-#### song + tag
-Music nDCG: 0.254614
-Tag nDCG: 0.405034
-
-#### tag
-Music nDCG: 0.0231366
-Tag nDCG: 0.442242
-
-#### song
-Music nDCG: 0.323833
-Tag nDCG: 0.544667
-
-#### x (title only)
-Music nDCG: 0.000511157
-Tag nDCG: 0.055223
-
 오히려 태그가 떨어짐 , 아마 안 유사한 애들도 들어와서 그런듯
 
 
 ##  실험 3
 
-
-
 제목을 끼얹어 보자
 
 가장 단순하게 질의 제목에 있는 단어가 train 제목에 있기라도 하면 가장 큰 유사도 점수를 줘보자. (10점)
-
-### Total score
-Music nDCG: 0.224655
-Tag nDCG: 0.470986
-Score: 0.261605
-
-#### song + tag
-Music nDCG: 0.240961
-Tag nDCG: 0.473315
-
-#### tag
-Music nDCG: 0.0349665
-Tag nDCG: 0.388536
-
-#### song
-Music nDCG: 0.295177
-Tag nDCG: 0.530006
-
-#### x (title only)
-Music nDCG: 0.0823252
-Tag nDCG: 0.255488
-
 
 태그는 말도안되게높아졌는데 Music 은 박살남.  title only case에서 tag score가 인상적으로 높다. 또한 tag만 있는것보다 music 점수가 높다.
 
@@ -160,23 +97,6 @@ Tag nDCG: 0.255488
 실험 3에서 tag_q in tag_t 일때 1개라도 같던가 유사하면 6점주고 뻇는데, tag  갯수별로 2점씩 주는걸로 바꾸었다.
 
 
-#### Total score
-Music nDCG: 0.225211
-Tag nDCG: 0.442562
-Score: 0.257814
-#### song + tag
-Music nDCG: 0.241467
-Tag nDCG: 0.426395
-#### tag
-Music nDCG: 0.0375836
-Tag nDCG: 0.312034
-#### song
-Music nDCG: 0.295177
-Tag nDCG: 0.529474
-#### x (title only)
-Music nDCG: 0.0823252
-Tag nDCG: 0.259639
-
 
 ### 실험 5
 
@@ -187,26 +107,6 @@ Tag nDCG: 0.259639
 질의 제목의 단어당 train 제목과 같은 단어가 있는 경우 + 3점 (기존 10점)
 
 
-#### Total score
-Music nDCG: 0.235478
-Tag nDCG: 0.446817
-Score: 0.267179
-#### song + tag
-Music nDCG: 0.249401
-Tag nDCG: 0.389981
-#### tag
-Music nDCG: 0.0396738
-Tag nDCG: 0.279656
-#### song
-Music nDCG: 0.310566
-Tag nDCG: 0.584533
-#### x (title only)
-Music nDCG: 0.090948
-Tag nDCG: 0.255488
-
-|제목|내용|설명|
-|------|---|---|
-
 
 #결론
 
@@ -215,7 +115,7 @@ music score
 
 |실험 종류|지수|실험 1|실험 2| 실험 3|실험 4|실험 5|
 |:---|---|---|---|---|---|---|
-|'total'|0.236434 |0.233764 |0.234814 |0.224655|0.225211 |0.235478|
+|'total'|<span style="color:red">0.236434</span> |0.233764 |0.234814 |0.224655|0.225211 |0.235478|
 |'song+tag' |0.252359  |0.253778 |0.254614 |0.240961|0.241467 |0.249401|
 |'tag'| 0.0178572  |0.0178572 |0.0231366 |0.0349665|0.0375836|0.0396738|
 |'song'|0.331558  |0.323833 |0.323833 |0.295177 |0.295177 |0.310566|
