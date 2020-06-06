@@ -43,10 +43,10 @@ class GenreMostPopular:
         song_weights = Counter()
 
 
-        for i in range(20):
+        for i in range(40):
             weight.append(sorted_list[i][0])
 
-        for i in range(20):
+        for i in range(40):
             if sorted_list[i][0] == 0:
                 break
             cur_playlist = song_sets[sorted_list[i][1]]
@@ -162,7 +162,7 @@ class GenreMostPopular:
 
                 for word in my_title:
                     if word in title_lists[idx]:
-                        intersect_num += 10
+                        intersect_num += 3
 
                 sorted_list.append([intersect_num, idx])
 
