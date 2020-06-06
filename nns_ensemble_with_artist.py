@@ -28,18 +28,20 @@ class GenreMostPopular:
     def _train_playlist(self, train):
         tag_lists = []
         song_lists = []
-
+        title_lists = []
         for t in train:
             tag_lists.append(set(t['tags']))
             song_lists.append(set(t['songs']))
+            title_lists.append(t['plylst_title'].split(' '))
 
-        return song_lists, tag_lists
+        return song_lists, tag_lists,title_lists
 
 
-    def _get_song_recommends(self, song_sets, my_songs, sorted_list, my_artists, my_genres, song_meta):
+    def _get_song_recommends(self, song_sets, my_songs, sorted_list, my_artists_counter, my_genres_counter, song_meta):
         rec_song_list = list()
         weight = []
         song_weights = Counter()
+
 
         for i in range(20):
             weight.append(sorted_list[i][0])
@@ -52,23 +54,23 @@ class GenreMostPopular:
                 if song not in my_songs:
                     song_weights[song] += weight[i]
                     cur_artists = song_meta[song]['artist_id_basket']
-                    chk = False
+
+
                     for artist in cur_artists:
-                        if artist in my_artists:
-                            chk = True
+                        if artist in my_artists_counter:
+                            song_weights[song] += (weight[i] / 4) * (my_artists_counter[artist])/(sum(my_artists_counter.values()))
                             break
-                    if chk:
-                        song_weights[song] += (weight[i] // 4)
+
 
                     cur_genres = song_meta[song]['song_gn_dtl_gnr_basket']
                     tot_num = len(cur_genres)
                     matched_num = 0
                     for genre in cur_genres:
-                        if genre in my_genres:
-                            matched_num += 2
+                        if genre in my_genres_counter:
+                            matched_num += my_genres_counter[genre]
                     if matched_num:
                         #w = int((matched_num / tot_num)*(weight[i] // 2))
-                        song_weights[song] += int((matched_num / tot_num)*(weight[i] / 5))
+                        song_weights[song] += ( matched_num/ (sum(my_genres_counter.values())))*(weight[i] / 5)
 
         song_weights_sorted = song_weights.most_common()
 
@@ -124,41 +126,51 @@ class GenreMostPopular:
 
     def _generate_answers(self, song_meta_json, train, questions):
         song_meta = {int(song["id"]): song for song in song_meta_json}
-        song_mp_counter, song_mp = most_popular(train, "songs", 200)
-        tag_mp_counter, tag_mp = most_popular(train, "tags", 100)
-        song_mp_per_genre = self._song_mp_per_genre(song_meta, song_mp_counter)
-        song_sets, tag_sets = self._train_playlist(train)
+        song_sets, tag_sets, title_lists = self._train_playlist(train)
 
         answers = []
 
         for q in tqdm(questions):
             my_songs = q['songs']
             my_tags = q['tags']
-            my_artists = set()
-            my_genres = set()
+            my_title = q['plylst_title'].split(' ')
+            my_artists_counter = Counter()
+            my_genres_counter = Counter()
             for song in my_songs:
                 cur_artists = song_meta[song]['artist_id_basket']
-                for artist in cur_artists:
-                    my_artists.add(artist)
-                cur_genres = song_meta[song]['song_gn_dtl_gnr_basket']
-                for genre in cur_genres:
-                    my_genres.add(genre)
+                my_artists_counter.update(cur_artists)
 
-            cnt = 0
+                cur_genres = song_meta[song]['song_gn_dtl_gnr_basket']
+                my_genres_counter.update(cur_genres)
+
+
             sorted_list = []
-            for song_set in song_sets:
+
+            for idx, song_set in enumerate(song_sets):
                 intersect_num = 0
                 for song in my_songs:
                     if song in song_set:
                         intersect_num += 4
-                for tag in my_tags:
-                    if tag in tag_sets[cnt]:
+
+                for tag_q in my_tags:
+                    chk = False
+                    for tag_t in tag_sets[idx]:
+                        ## == 에서 in 으로 바꿔었다가 다시 == 으로 바꾸었다.
+                        if tag_q == tag_t:
+                            chk = True
+                            break
+                    if chk:
                         intersect_num += 6
-                sorted_list.append([intersect_num, cnt])
-                cnt += 1
+
+                for word in my_title:
+                    if word in title_lists[idx]:
+                        intersect_num += 10
+
+                sorted_list.append([intersect_num, idx])
+
 
             sorted_list.sort(key=lambda x: x[0], reverse=True)
-            rec_song_list = self._get_song_recommends(song_sets, my_songs, sorted_list, my_artists, my_genres, song_meta)
+            rec_song_list = self._get_song_recommends(song_sets, my_songs, sorted_list, my_artists_counter, my_genres_counter, song_meta)
             rec_tag_list = self._get_tag_recommends(tag_sets, my_tags, sorted_list)
 
             if len(rec_song_list) != 100:
@@ -166,7 +178,6 @@ class GenreMostPopular:
             if len(rec_tag_list) != 10:
                 print(f'tag sz : {len(rec_tag_list)}')
 
-            #print(rec_tag_list)
             answers.append({
                 "id": q["id"],
                 "songs": rec_song_list,
