@@ -1,0 +1,1 @@
+python genre_most_popular.py run --song_meta_fname=res/song_meta.json --train_fname=arena_data/orig/train.json --question_fname=arena_data/questions/val.json 
