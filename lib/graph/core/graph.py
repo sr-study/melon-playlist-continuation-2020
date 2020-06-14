@@ -9,6 +9,14 @@ class Graph:
         self._in_edges = defaultdict(set)
         self._out_edges = defaultdict(set)
 
+    @property
+    def nodes(self):
+        return self._nodes
+
+    @property
+    def edges(self):
+        return self._edges
+
     def add_node(self, node_class, **kwargs):
         node = node_class(self, **kwargs)
         self._nodes.append(node)
