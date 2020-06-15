@@ -3,7 +3,7 @@ from ..core import Node
 
 
 class AlbumNode(Node):
-    class EdgeType(Node.EdgeType):
+    class Relation(Node.Relation):
         SONG = enum.auto()
 
     __slots__ = ['_id', '_name']

@@ -3,7 +3,7 @@ from ..core import Node
 
 
 class PlaylistNode(Node):
-    class EdgeType(Node.EdgeType):
+    class Relation(Node.Relation):
         TAG = enum.auto()
         SONG = enum.auto()
 

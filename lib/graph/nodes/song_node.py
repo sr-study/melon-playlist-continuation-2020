@@ -3,7 +3,7 @@ from ..core import Node
 
 
 class SongNode(Node):
-    class EdgeType(Node.EdgeType):
+    class Relation(Node.Relation):
         ARTIST = enum.auto()
         ALBUM = enum.auto()
         GENRE = enum.auto()

@@ -22,8 +22,8 @@ class Graph:
         self._nodes.append(node)
         return node
 
-    def add_edge(self, src, dst, edge_type):
-        edge = Edge(self, src, dst, edge_type)
+    def add_edge(self, src, dst, relation):
+        edge = Edge(self, src, dst, relation)
         self._edges.append(edge)
         self._in_edges[dst].add(edge)
         self._out_edges[src].add(edge)

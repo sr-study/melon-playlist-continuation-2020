@@ -51,15 +51,15 @@ class GraphBuilder:
                     id=artist_id,
                     name=artist_name,
                 )
-                self._graph.add_edge(song, artist, SongNode.EdgeType.ARTIST)
-                self._graph.add_edge(artist, song, ArtistNode.EdgeType.SONG)
+                self._graph.add_edge(song, artist, SongNode.Relation.ARTIST)
+                self._graph.add_edge(artist, song, ArtistNode.Relation.SONG)
 
             album = self._albums.get_or_create(
                 id=song_meta['album_id'],
                 name=song_meta['album_name'],
             )
-            self._graph.add_edge(song, album, SongNode.EdgeType.ALBUM)
-            self._graph.add_edge(album, song, AlbumNode.EdgeType.SONG)
+            self._graph.add_edge(song, album, SongNode.Relation.ALBUM)
+            self._graph.add_edge(album, song, AlbumNode.Relation.SONG)
 
     def _parse_playlists(self, playlists):
         for playlist_meta in playlists:
@@ -75,13 +75,13 @@ class GraphBuilder:
                     id=tag_name,
                     name=tag_name,
                 )
-                self._graph.add_edge(playlist, tag, PlaylistNode.EdgeType.TAG)
-                self._graph.add_edge(tag, playlist, TagNode.EdgeType.PLAYLIST)
+                self._graph.add_edge(playlist, tag, PlaylistNode.Relation.TAG)
+                self._graph.add_edge(tag, playlist, TagNode.Relation.PLAYLIST)
 
             for song_id in playlist_meta['songs']:
                 song = self._songs.get(song_id)
-                self._graph.add_edge(playlist, song, PlaylistNode.EdgeType.SONG)
-                self._graph.add_edge(song, playlist, SongNode.EdgeType.PLAYLIST)
+                self._graph.add_edge(playlist, song, PlaylistNode.Relation.SONG)
+                self._graph.add_edge(song, playlist, SongNode.Relation.PLAYLIST)
 
     @staticmethod
     def _validate_song(song, id, name, issue_date):
