@@ -6,8 +6,8 @@ class Graph:
     def __init__(self):
         self._nodes = []
         self._edges = []
-        self._in_edges = defaultdict(set)
-        self._out_edges = defaultdict(set)
+        self._in_edges = defaultdict(list)
+        self._out_edges = defaultdict(list)
 
     @property
     def nodes(self):
@@ -25,6 +25,6 @@ class Graph:
     def add_edge(self, src, dst, relation):
         edge = Edge(self, src, dst, relation)
         self._edges.append(edge)
-        self._in_edges[dst].add(edge)
-        self._out_edges[src].add(edge)
+        self._in_edges[dst].append(edge)
+        self._out_edges[src].append(edge)
         return edge

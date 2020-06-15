@@ -1,6 +1,7 @@
 from ..core import Graph
 from ..nodes import AlbumNode, ArtistNode, GenreNode, PlaylistNode, SongNode, TagNode
 from .node_manager import NodeManager
+from .edge_manager import EdgeManager
 
 
 class GraphBuilder:
@@ -16,6 +17,7 @@ class GraphBuilder:
         self._playlists = None
         self._songs = None
         self._tags = None
+        self._edges = None
 
     def build(self):
         self._initialize()
@@ -33,6 +35,7 @@ class GraphBuilder:
         self._playlists = NodeManager(self._graph, PlaylistNode, GraphBuilder._validate_playlist)
         self._songs = NodeManager(self._graph, SongNode, GraphBuilder._validate_song)
         self._tags = NodeManager(self._graph, TagNode, GraphBuilder._validate_tag)
+        self._edges = EdgeManager(self._graph)
 
     def _parse_genres(self, genre_gn_all):
         for key, value in genre_gn_all.items():
@@ -51,15 +54,15 @@ class GraphBuilder:
                     id=artist_id,
                     name=artist_name,
                 )
-                self._graph.add_edge(song, artist, SongNode.Relation.ARTIST)
-                self._graph.add_edge(artist, song, ArtistNode.Relation.SONG)
+                self._edges.get_or_create(song, artist, SongNode.Relation.ARTIST)
+                self._edges.get_or_create(artist, song, ArtistNode.Relation.SONG)
 
             album = self._albums.get_or_create(
                 id=song_meta['album_id'],
                 name=song_meta['album_name'],
             )
-            self._graph.add_edge(song, album, SongNode.Relation.ALBUM)
-            self._graph.add_edge(album, song, AlbumNode.Relation.SONG)
+            self._edges.get_or_create(song, album, SongNode.Relation.ALBUM)
+            self._edges.get_or_create(album, song, AlbumNode.Relation.SONG)
 
     def _parse_playlists(self, playlists):
         for playlist_meta in playlists:
@@ -75,13 +78,13 @@ class GraphBuilder:
                     id=tag_name,
                     name=tag_name,
                 )
-                self._graph.add_edge(playlist, tag, PlaylistNode.Relation.TAG)
-                self._graph.add_edge(tag, playlist, TagNode.Relation.PLAYLIST)
+                self._edges.get_or_create(playlist, tag, PlaylistNode.Relation.TAG)
+                self._edges.get_or_create(tag, playlist, TagNode.Relation.PLAYLIST)
 
             for song_id in playlist_meta['songs']:
                 song = self._songs.get(song_id)
-                self._graph.add_edge(playlist, song, PlaylistNode.Relation.SONG)
-                self._graph.add_edge(song, playlist, SongNode.Relation.PLAYLIST)
+                self._edges.get_or_create(playlist, song, PlaylistNode.Relation.SONG)
+                self._edges.get_or_create(song, playlist, SongNode.Relation.PLAYLIST)
 
     @staticmethod
     def _validate_song(song, id, name, issue_date):
