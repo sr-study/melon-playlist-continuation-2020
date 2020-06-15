@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 from arena_util import load_json
 from arena_util import write_json
+from datetime import datetime
 from arena_util import remove_seen
 from arena_util import most_popular
 
@@ -37,20 +38,40 @@ class GenreMostPopular:
         return song_lists, tag_lists,title_lists
 
 
-    def _get_song_recommends(self, song_sets, my_songs, sorted_list, my_artists_counter, my_genres_counter, song_meta):
+    def _get_song_recommends(self, song_sets, my_songs, sorted_list, my_artists_counter, my_genres_counter, song_meta,cur_date):
         rec_song_list = list()
         weight = []
         song_weights = Counter()
 
 
-        for i in range(40):
+        for i in range(20):
             weight.append(sorted_list[i][0])
 
-        for i in range(40):
+        for i in range(20):
             if sorted_list[i][0] == 0:
                 break
             cur_playlist = song_sets[sorted_list[i][1]]
+
+
             for song in cur_playlist:
+
+                if song not in my_songs:
+                    song_date = song_meta[song]['issue_date']
+                    try:
+                        song_date = datetime.strptime(song_date, '%Y%m%d')
+                    except Exception:
+                        try:
+                            song_date = datetime.strptime(song_date[:6], '%Y%m')
+                        except Exception:
+                            try:
+                                song_date = datetime.strptime(song_date[:4], '%Y')
+                            except Exception:
+                                song_date = datetime.strptime('1900', '%Y')
+
+                    if song_date > cur_date:
+                        continue
+
+                        
                 if song not in my_songs:
                     song_weights[song] += weight[i]
                     cur_artists = song_meta[song]['artist_id_basket']
@@ -70,7 +91,7 @@ class GenreMostPopular:
                             matched_num += my_genres_counter[genre]
                     if matched_num:
                         #w = int((matched_num / tot_num)*(weight[i] // 2))
-                        song_weights[song] +=  matched_num/ (sum(my_genres_counter.values()))*weight[i]
+                        song_weights[song] +=  (matched_num/ sum(my_genres_counter.values()))*weight[i]
 
         song_weights_sorted = song_weights.most_common()
 
@@ -135,7 +156,7 @@ class GenreMostPopular:
         for q in tqdm(questions):
             my_songs = q['songs']
             my_tags = q['tags']
-
+            cur_date = datetime.strptime(q['updt_date'][:10], '%Y-%m-%d')
             tag_only =False
             if  len(my_songs)==0 and len(my_tags)!=0:
                 tag_only =True
@@ -182,7 +203,7 @@ class GenreMostPopular:
 
 
             sorted_list.sort(key=lambda x: x[0], reverse=True)
-            rec_song_list = self._get_song_recommends(song_sets, my_songs, sorted_list, my_artists_counter, my_genres_counter, song_meta)
+            rec_song_list = self._get_song_recommends(song_sets, my_songs, sorted_list, my_artists_counter, my_genres_counter, song_meta,cur_date)
             rec_tag_list = self._get_tag_recommends(tag_sets, my_tags, sorted_list)
 
             if len(rec_song_list) != 100:
