@@ -4,7 +4,8 @@ from ..core import Edge
 
 class EdgeManager:
     def __init__(self, graph):
-        nested_dict = lambda: defaultdict(nested_dict)
+        def nested_dict():
+            return defaultdict(nested_dict)
 
         self._graph = graph
         self._edges = nested_dict()

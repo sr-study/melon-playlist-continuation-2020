@@ -9,7 +9,8 @@ class NodeManager:
         if id in self._nodes:
             node = self._nodes[id]
             if not self._validate(node, id, **kwargs):
-                print(f"[Warning] NodeManager<{self._node_class}>.get_or_create(): "
+                print(f"[Warning] "
+                      "NodeManager<{self._node_class}>.get_or_create(): "
                       "Getting data and creating data is not same.")
             return node
         else:
