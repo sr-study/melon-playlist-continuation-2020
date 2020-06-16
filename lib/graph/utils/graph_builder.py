@@ -76,6 +76,26 @@ class GraphBuilder:
             self._edges.get_or_create(song, album, SongNode.Relation.ALBUM)
             self._edges.get_or_create(album, song, AlbumNode.Relation.SONG)
 
+            for genre_id in song_meta['song_gn_gnr_basket']:
+                if not self._genres.has(genre_id):
+                    self._genres.get_or_create(id=genre_id, name=None)
+
+                genre = self._genres.get(genre_id)
+                self._edges.get_or_create(
+                    song, genre, SongNode.Relation.GENRE)
+                self._edges.get_or_create(
+                    genre, song, GenreNode.Relation.SONG)
+
+            for detailed_genre_id in song_meta['song_gn_dtl_gnr_basket']:
+                if not self._genres.has(detailed_genre_id):
+                    self._genres.get_or_create(id=detailed_genre_id, name=None)
+
+                detailed_genre = self._genres.get(detailed_genre_id)
+                self._edges.get_or_create(
+                    song, detailed_genre, SongNode.Relation.DETAILED_GENRE)
+                self._edges.get_or_create(
+                    detailed_genre, song, GenreNode.Relation.SONG)
+
     def _parse_playlists(self, playlists):
         for playlist_meta in tqdm(playlists, "Parse playlists"):
             playlist = self._playlists.get_or_create(
