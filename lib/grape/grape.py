@@ -2,6 +2,7 @@ from tqdm import tqdm
 from collections import defaultdict
 from lib.graph import CachedGraph
 from lib.graph import SongNode, TagNode
+from .utils import merge_unique_lists
 
 
 class Grape:
@@ -34,6 +35,9 @@ class Grape:
         return self
 
     def predict(self, questions):
+        self._most_popular_songs = self._predict_most_popular_songs()
+        self._most_popular_tags = self._predict_most_popular_tags()
+
         answers = []
         for question in tqdm(questions):
             answer = self._predict(question)
@@ -43,8 +47,8 @@ class Grape:
 
     def _predict(self, question):
         question_id = question['id']
-        tags = question['tags']
         songs = question['songs']
+        tags = question['tags']
         title = question['plylst_title']
         like_count = question['like_cnt']
         update_date = question['updt_date']
@@ -52,14 +56,29 @@ class Grape:
         predicted_songs = self._predict_songs()
         predicted_tags = self._predict_tags()
 
+        answer_songs = merge_unique_lists(
+            songs, predicted_songs)[:self.n_recommended_songs]
+        answer_tags = merge_unique_lists(
+            tags, predicted_tags)[:self.n_recommended_tags]
+
         return {
             'id': question_id,
-            'songs': predicted_songs,
-            'tags': predicted_tags
+            'songs': answer_songs,
+            'tags': answer_tags,
         }
 
     def _predict_songs(self):
-        return [i for i in range(self.n_recommended_songs)]
+        return self._most_popular_songs
 
     def _predict_tags(self):
-        return [str(i) for i in range(self.n_recommended_tags)]
+        return self._most_popular_tags
+
+    def _predict_most_popular_songs(self):
+        sorted_songs = sorted(
+            self._song_counts, key=self._song_counts.get, reverse=True)
+        return [song.id for song in sorted_songs][:self.n_recommended_songs]
+
+    def _predict_most_popular_tags(self):
+        sorted_tags = sorted(
+            self._tag_counts, key=self._tag_counts.get, reverse=True)
+        return [tag.id for tag in sorted_tags][:self.n_recommended_tags]
