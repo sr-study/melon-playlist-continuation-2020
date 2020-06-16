@@ -33,14 +33,14 @@ class CachedGraph:
         self._register_edges(self._graph.edges)
 
     def _register_nodes(self, nodes):
-        for node in tqdm(nodes, "Cache nodes"):
+        for node in tqdm(nodes, "Caching nodes"):
             node_proxy = CachedGraph.NodeProxy(self, node)
             node_class = node_proxy.get_class()
             self._nodes[node] = node_proxy
             self._class_nodes[node_class, node_proxy.id] = node_proxy
 
     def _register_edges(self, edges):
-        for edge in tqdm(edges, "Cache edges"):
+        for edge in tqdm(edges, "Caching edges"):
             edge_proxy = CachedGraph.EdgeProxy(self, edge)
             self._edges[edge] = edge_proxy
             src = edge_proxy.src

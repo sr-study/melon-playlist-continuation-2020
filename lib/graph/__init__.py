@@ -1,7 +1,7 @@
 from .core import Edge, Element, Graph, Node
 from .nodes import (
     AlbumNode, ArtistNode, GenreNode, PlaylistNode, SongNode, TagNode)
-from .utils import GraphBuilder
+from .utils import CachedGraph, GraphBuilder
 
 __all__ = [
     'Edge',
@@ -14,5 +14,6 @@ __all__ = [
     'PlaylistNode',
     'SongNode',
     'TagNode',
+    'CachedGraph',
     'GraphBuilder',
 ]

@@ -1,6 +1,6 @@
 from tqdm import tqdm
 from collections import defaultdict
-from .cached_graph import CachedGraph
+from lib.graph import CachedGraph
 from lib.graph import SongNode, TagNode
 
 
@@ -20,7 +20,7 @@ class Grape:
         self._tag_counts = defaultdict(lambda: 0)
         self._song_counts = defaultdict(lambda: 0)
 
-        for playlist in tqdm(playlists):
+        for playlist in tqdm(playlists, "Fitting grape"):
             tags = [self._graph.get_node(TagNode, id)
                     for id in playlist['tags'] if self._graph.has_node(TagNode, id)]
             songs = [self._graph.get_node(SongNode, id)

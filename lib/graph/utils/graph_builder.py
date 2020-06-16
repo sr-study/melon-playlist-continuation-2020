@@ -46,11 +46,11 @@ class GraphBuilder:
         self._edges = EdgeManager(self._graph)
 
     def _parse_genres(self, genre_gn_all):
-        for key, value in tqdm(genre_gn_all.items(), "Parse genres"):
+        for key, value in tqdm(genre_gn_all.items(), "Parsing genres"):
             self._genres.get_or_create(id=key, name=value)
 
     def _parse_songs(self, song_metas):
-        for song_meta in tqdm(song_metas, "Parse songs"):
+        for song_meta in tqdm(song_metas, "Parsing songs"):
             song = self._songs.get_or_create(
                 id=song_meta['id'],
                 name=song_meta['song_name'],
@@ -97,7 +97,7 @@ class GraphBuilder:
                     detailed_genre, song, GenreNode.Relation.SONG)
 
     def _parse_playlists(self, playlists):
-        for playlist_meta in tqdm(playlists, "Parse playlists"):
+        for playlist_meta in tqdm(playlists, "Parsing playlists"):
             playlist = self._playlists.get_or_create(
                 id=playlist_meta['id'],
                 name=playlist_meta['plylst_title'],
