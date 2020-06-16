@@ -4,20 +4,21 @@ from collections import defaultdict
 
 class CachedGraph:
     def __init__(self, graph):
-        self._graph = None
-
         self._initialize(graph)
 
     @property
     def nodes(self):
-        return self._nodes.values()
+        return list(self._nodes.values())
 
     @property
     def edges(self):
-        return self._edges.values()
+        return list(self._edges.values())
+
+    def has_node(self, node_class, id):
+        return ((node_class, id) in self._class_nodes)
 
     def get_node(self, node_class, id):
-        return self._class_nodes[node_class][id]
+        return self._class_nodes[node_class, id]
 
     def _initialize(self, graph):
         self._graph = graph
@@ -44,8 +45,8 @@ class CachedGraph:
             self._edges[edge] = edge_proxy
             src = edge_proxy.src
             relation = edge_proxy.relation
-            self._node_edges[src].append(edge)
-            self._node_relation_edges[src, relation].append(edge)
+            self._node_edges[src].append(edge_proxy)
+            self._node_relation_edges[src, relation].append(edge_proxy)
 
     class NodeProxy:
         def __init__(self, graph, node):
@@ -75,6 +76,14 @@ class CachedGraph:
             for attr in public_attrs:
                 if not hasattr(self, attr):
                     setattr(self, attr, getattr(obj, attr))
+
+        def __str__(self):
+            return repr(self)
+
+        def __repr__(self):
+            class_name = self.__class__.__name__
+            node_class_name = self.get_class().__qualname__
+            return f"<{class_name}({node_class_name}) object at {hex(id(self))}>"
 
     class EdgeProxy:
         def __init__(self, graph, edge):
