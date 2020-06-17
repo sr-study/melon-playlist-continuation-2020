@@ -37,7 +37,7 @@ class GrapeRecommender:
         questions = read_json(question_fname)
 
         print("Writing answers...")
-        answers = grape.predict(questions)
+        answers = grape.predict_all(questions)
         write_json(answers, "./arena_data/results/results.json")
         validate_answers(answers, questions)
 

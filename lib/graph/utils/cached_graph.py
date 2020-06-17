@@ -14,11 +14,24 @@ class CachedGraph:
     def edges(self):
         return list(self._edges.values())
 
-    def has_node(self, node_class, id):
-        return ((node_class, id) in self._class_nodes)
+    def has_node(self, node_class, id_):
+        return ((node_class, id_) in self._class_nodes)
 
-    def get_node(self, node_class, id):
-        return self._class_nodes[node_class, id]
+    def get_node(self, node_class, id_, noneable=False):
+        if noneable:
+            try:
+                return self._class_nodes[node_class, id_]
+            except KeyError:
+                return None
+        else:
+            return self._class_nodes[node_class, id_]
+
+    def get_nodes(self, node_class, ids, ignore_none=False):
+        if ignore_none:
+            return [self.get_node(node_class, id_)
+                    for id_ in ids if self.has_node(node_class, id_)]
+        else:
+            return [self.get_node(node_class, id_) for id_ in ids]
 
     def _initialize(self, graph):
         self._graph = graph
