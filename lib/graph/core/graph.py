@@ -15,12 +15,18 @@ class Graph:
     def edges(self):
         return self._edges
 
-    def add_node(self, node_class, **kwargs):
+    def create_node(self, node_class, **kwargs):
         node = node_class(self, **kwargs)
-        self._nodes.append(node)
+        self.add_node(node)
         return node
 
-    def add_edge(self, src, dst, relation):
+    def create_edge(self, src, dst, relation):
         edge = Edge(self, src, dst, relation)
-        self._edges.append(edge)
+        self.add_edge(edge)
         return edge
+
+    def add_node(self, node):
+        self._nodes.append(node)
+
+    def add_edge(self, edge):
+        self._edges.append(edge)

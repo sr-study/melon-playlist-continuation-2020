@@ -7,18 +7,13 @@ class PlaylistNode(Node):
         TAG = enum.auto()
         SONG = enum.auto()
 
-    __slots__ = ['_id', '_name', '_like_count', '_update_date']
+    __slots__ = ['_name', '_like_count', '_update_date']
 
     def __init__(self, graph, id, name, like_count, update_date):
-        super().__init__(graph)
-        self._id = id
+        super().__init__(graph, id)
         self._name = name
         self._like_count = like_count
         self._update_date = update_date
-
-    @property
-    def id(self):
-        return self._id
 
     @property
     def name(self):

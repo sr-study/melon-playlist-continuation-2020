@@ -29,7 +29,7 @@ class NodeManager:
         if self.has(id):
             raise Exception("Node already exists")
 
-        node = self._graph.add_node(self._node_class, id=id, **kwargs)
+        node = self._graph.create_node(self._node_class, id=id, **kwargs)
         self._nodes[id] = node
         return node
 

@@ -6,16 +6,11 @@ class TagNode(Node):
     class Relation(Node.Relation):
         PLAYLIST = enum.auto()
 
-    __slots__ = ['_id', '_name']
+    __slots__ = ['_name']
 
     def __init__(self, graph, id, name):
-        super().__init__(graph)
-        self._id = id
+        super().__init__(graph, id)
         self._name = name
-
-    @property
-    def id(self):
-        return self._id
 
     @property
     def name(self):

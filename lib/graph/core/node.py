@@ -6,5 +6,12 @@ class Node(Element):
     class Relation(enum.Enum):
         pass
 
-    def __init__(self, graph):
+    __slots__ = ['_id']
+
+    def __init__(self, graph, id):
         super().__init__(graph)
+        self._id = id
+
+    @property
+    def id(self):
+        return self._id

@@ -10,17 +10,12 @@ class SongNode(Node):
         DETAILED_GENRE = enum.auto()
         PLAYLIST = enum.auto()
 
-    __slots__ = ['_id', '_name', '_issue_date']
+    __slots__ = ['_name', '_issue_date']
 
     def __init__(self, graph, id, name, issue_date):
-        super().__init__(graph)
-        self._id = id
+        super().__init__(graph, id)
         self._name = name
         self._issue_date = issue_date
-
-    @property
-    def id(self):
-        return self._id
 
     @property
     def name(self):

@@ -1,7 +1,11 @@
 from tqdm import tqdm
 from ..core import Graph
-from ..nodes import (
-    AlbumNode, ArtistNode, GenreNode, PlaylistNode, SongNode, TagNode)
+from ..nodes import AlbumNode
+from ..nodes import ArtistNode
+from ..nodes import GenreNode
+from ..nodes import PlaylistNode
+from ..nodes import SongNode
+from ..nodes import TagNode
 from .node_manager import NodeManager
 from .edge_manager import EdgeManager
 

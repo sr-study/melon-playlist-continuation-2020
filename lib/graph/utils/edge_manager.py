@@ -30,6 +30,6 @@ class EdgeManager:
         if self.has(src, dst, relation):
             raise Exception("Node already exists")
 
-        edge = self._graph.add_edge(src, dst, relation)
+        edge = self._graph.create_edge(src, dst, relation)
         self._edges[src][dst][relation] = edge
         return edge
