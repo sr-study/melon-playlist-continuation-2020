@@ -47,26 +47,17 @@ class GraphSpread(BaseModel):
         song_nodes = self._graph.get_nodes(SongNode, songs, ignore_none=True)
         tag_nodes = self._graph.get_nodes(TagNode, tags, ignore_none=True)
 
+        scores = ScoreMap(int)
         weights = ScoreMap(int)
         weights.increase(song_nodes, 1, modify=True)
         weights.increase(tag_nodes, 1, modify=True)
 
-        predicted_songs = OrderedSet(song_nodes)
+        weights = ScoreMap(int, dict(_move_once(weights).top(20)))
+        weights = _move_once(weights)
+        scores.add(weights, modify=True)
 
-        max_tries = 5
-        n_tries = max_tries
-        while (len(predicted_songs) < self._max_songs) and (n_tries > 0):
-            prev_len = len(predicted_songs)
-
-            weights = _move_once(weights)
-            song_scores = weights.filter(
-                lambda k, v: k.get_class() == SongNode)
-            predicted_songs |= song_scores.top_keys()
-
-            if len(predicted_songs) == prev_len:
-                n_tries -= 1
-            else:
-                n_tries = max_tries
+        song_scores = scores.filter(lambda k, v: k.get_class() == SongNode)
+        predicted_songs = OrderedSet(song_nodes) | song_scores.top_keys()
 
         return convert_to_ids(predicted_songs)[:self._max_songs]
 
@@ -77,26 +68,17 @@ class GraphSpread(BaseModel):
         song_nodes = self._graph.get_nodes(SongNode, songs, ignore_none=True)
         tag_nodes = self._graph.get_nodes(TagNode, tags, ignore_none=True)
 
+        scores = ScoreMap(int)
         weights = ScoreMap(int)
         weights.increase(song_nodes, 1, modify=True)
         weights.increase(tag_nodes, 1, modify=True)
 
-        predicted_tags = OrderedSet(tag_nodes)
+        weights = ScoreMap(int, dict(_move_once(weights).top(20)))
+        weights = _move_once(weights)
+        scores.add(weights, modify=True)
 
-        max_tries = 5
-        n_tries = max_tries
-        while (len(predicted_tags) < self._max_tags) and (n_tries > 0):
-            prev_len = len(predicted_tags)
-
-            weights = _move_once(weights)
-            tag_scores = weights.filter(
-                lambda k, v: k.get_class() == TagNode)
-            predicted_tags |= tag_scores.top_keys()
-
-            if len(predicted_tags) == prev_len:
-                n_tries -= 1
-            else:
-                n_tries = max_tries
+        tag_scores = scores.filter(lambda k, v: k.get_class() == TagNode)
+        predicted_tags = OrderedSet(tag_nodes) | tag_scores.top_keys()
 
         return convert_to_ids(predicted_tags)[:self._max_tags]
 
@@ -109,8 +91,12 @@ def _move_once(weights, relations=None):
                 next_weights[next_node] += weight
     else:
         for node, weight in weights.items():
+            next_nodes = []
             for relation in relations:
                 for next_node in node.get_related_nodes(relation):
-                    next_weights[next_node] += weight
+                    next_nodes.append(next_node)
+
+            for next_node in next_nodes:
+                next_weights[next_node] += weight
 
     return next_weights

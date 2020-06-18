@@ -41,6 +41,8 @@ class CachedGraph:
         self._edges = {}
         self._node_edges = defaultdict(list)
         self._node_relation_edges = defaultdict(list)
+        self._node_neighbor_nodes = defaultdict(list)
+        self._node_relation_nodes = defaultdict(list)
 
         self._register_nodes(self._graph.nodes)
         self._register_edges(self._graph.edges)
@@ -57,9 +59,12 @@ class CachedGraph:
             edge_proxy = CachedGraph.EdgeProxy(self, edge)
             self._edges[edge] = edge_proxy
             src = edge_proxy.src
+            dst = edge_proxy.dst
             relation = edge_proxy.relation
             self._node_edges[src].append(edge_proxy)
             self._node_relation_edges[src, relation].append(edge_proxy)
+            self._node_neighbor_nodes[src].append(dst)
+            self._node_relation_nodes[src, relation].append(dst)
 
     class NodeProxy:
         def __init__(self, graph, node):
@@ -81,8 +86,10 @@ class CachedGraph:
                 return self._graph._node_relation_edges[self, relation]
 
         def get_related_nodes(self, relation=None):
-            edges = self.get_related_edges(relation)
-            return [edge.dst for edge in edges]
+            if relation is None:
+                return self._graph._node_neighbor_nodes[self]
+            else:
+                return self._graph._node_relation_nodes[self, relation]
 
         def _foward_public_attributes(self, obj):
             public_attrs = filter(lambda x: not x.startswith('_'), dir(obj))

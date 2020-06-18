@@ -14,6 +14,15 @@ class ScoreMap(collections.defaultdict):
 
         return self
 
+    def multiply_all(self, value, modify=False):
+        if not modify:
+            return self.copy().multiply_all(value, modify=True)
+
+        for k in self:
+            self[k] *= value
+
+        return self
+
     def increase(self, keys, increment, modify=False):
         if not modify:
             return self.copy().increase(keys, increment, modify=True)
