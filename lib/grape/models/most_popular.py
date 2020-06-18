@@ -31,8 +31,8 @@ class MostPopular(BaseModel):
             for tag in tags:
                 tag_counts[tag] += 1
 
-        most_popular_songs = get_most_common_keys(song_counts, self._max_songs)
-        most_popular_tags = get_most_common_keys(tag_counts, self._max_tags)
+        most_popular_songs = get_most_common_keys(song_counts)
+        most_popular_tags = get_most_common_keys(tag_counts)
 
         self._most_popular_songs = convert_to_ids(most_popular_songs)
         self._most_popular_tags = convert_to_ids(most_popular_tags)
