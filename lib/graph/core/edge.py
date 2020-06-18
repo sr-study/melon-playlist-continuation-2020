@@ -21,3 +21,14 @@ class Edge(Element):
     @property
     def relation(self):
         return self._relation
+
+    def __hash__(self):
+        return hash((self._src, self._dst, self._relation))
+
+    def __eq__(self, other):
+        return (
+            self.__class__ == other.__class__ and
+            self._src == other._src and
+            self._dst == other._dst and
+            self._relation == other._relation
+        )
