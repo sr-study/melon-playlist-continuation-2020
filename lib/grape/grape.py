@@ -3,6 +3,7 @@ from .models import BaseModel
 from .models import GraphSpread
 from .models import MostPopular
 from .utils import merge_unique_lists
+from .utils import remove_seen
 
 
 class Grape(BaseModel):
@@ -30,7 +31,6 @@ class Grape(BaseModel):
 
     def predict(self, question):
         results = []
-        results.append(self._predict_default(question))
         results.append(self._graph_spread.predict(question))
         results.append(self._most_popular.predict(question))
 
@@ -39,18 +39,14 @@ class Grape(BaseModel):
         merged_tags = merge_unique_lists(
             *(result['tags'] for result in results))
 
-        answer_songs = merged_songs[:self._max_songs]
-        answer_tags = merged_tags[:self._max_tags]
+        filtered_songs = remove_seen(merged_songs, question['songs'])
+        filtered_tags = remove_seen(merged_tags, question['tags'])
+
+        answer_songs = filtered_songs[:self._max_songs]
+        answer_tags = filtered_tags[:self._max_tags]
 
         return {
             'id': question['id'],
             'songs': answer_songs,
             'tags': answer_tags,
-        }
-
-    def _predict_default(self, question):
-        return {
-            'id': question['id'],
-            'songs': question['songs'],
-            'tags': question['tags'],
         }

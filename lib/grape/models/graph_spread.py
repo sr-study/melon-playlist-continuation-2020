@@ -7,6 +7,7 @@ from .base import BaseModel
 from ..utils import merge_unique_lists
 from ..utils import convert_to_ids
 from ..utils import get_most_common_keys
+from ..utils import remove_seen
 from ..utils import OrderedSet
 from ..utils import ScoreMap
 
@@ -25,11 +26,7 @@ class GraphSpread(BaseModel):
         # like_count = question['like_cnt']
         # update_date = question['updt_date']
 
-        answer_songs = self._predict_songs(
-            songs=songs,
-            tags=tags,
-        )
-        answer_tags = self._predict_tags(
+        answer_songs, answer_tags = self._predict_songs_and_tags(
             songs=songs,
             tags=tags,
         )
@@ -40,9 +37,9 @@ class GraphSpread(BaseModel):
             'tags': answer_tags,
         }
 
-    def _predict_songs(self, songs, tags):
+    def _predict_songs_and_tags(self, songs, tags):
         if not tags and not songs:
-            return []
+            return [], []
 
         song_nodes = self._graph.get_nodes(SongNode, songs, ignore_none=True)
         tag_nodes = self._graph.get_nodes(TagNode, tags, ignore_none=True)
@@ -57,30 +54,14 @@ class GraphSpread(BaseModel):
         scores.add(weights, modify=True)
 
         song_scores = scores.filter(lambda k, v: k.get_class() == SongNode)
-        predicted_songs = OrderedSet(song_nodes) | song_scores.top_keys()
-
-        return convert_to_ids(predicted_songs)[:self._max_songs]
-
-    def _predict_tags(self, songs, tags):
-        if not tags and not songs:
-            return []
-
-        song_nodes = self._graph.get_nodes(SongNode, songs, ignore_none=True)
-        tag_nodes = self._graph.get_nodes(TagNode, tags, ignore_none=True)
-
-        scores = ScoreMap(int)
-        weights = ScoreMap(int)
-        weights.increase(song_nodes, 1, modify=True)
-        weights.increase(tag_nodes, 1, modify=True)
-
-        weights = ScoreMap(int, dict(_move_once(weights).top(20)))
-        weights = _move_once(weights)
-        scores.add(weights, modify=True)
+        top_song_ids = convert_to_ids(song_scores.top_keys())
+        predicted_song_ids = remove_seen(top_song_ids, songs)[:self._max_songs]
 
         tag_scores = scores.filter(lambda k, v: k.get_class() == TagNode)
-        predicted_tags = OrderedSet(tag_nodes) | tag_scores.top_keys()
+        top_tag_ids = convert_to_ids(tag_scores.top_keys())
+        predicted_tag_ids = remove_seen(top_tag_ids, tags)[:self._max_tags]
 
-        return convert_to_ids(predicted_tags)[:self._max_tags]
+        return predicted_song_ids, predicted_tag_ids
 
 
 def _move_once(weights, relations=None):

@@ -15,3 +15,8 @@ def convert_to_ids(nodes):
 
 def get_most_common_keys(counter, n=None):
     return [k for k, v in counter.most_common(n)]
+
+
+def remove_seen(l, seen):
+    seen = set(seen)
+    return [x for x in l if not (x in seen)]
