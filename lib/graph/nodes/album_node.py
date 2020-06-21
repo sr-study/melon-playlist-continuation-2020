@@ -4,7 +4,7 @@ from ..core import Node
 
 class AlbumNode(Node):
     class Relation(Node.Relation):
-        SONG = 1
+        SONG = Node.Relation.auto()
 
     __slots__ = ['name']
 

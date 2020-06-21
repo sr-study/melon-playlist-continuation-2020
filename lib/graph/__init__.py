@@ -1,4 +1,5 @@
 from .builders import GraphBuilder
+from .cached_graph import CachedGraph
 from .core import Edge
 from .core import Graph
 from .core import Node
@@ -8,10 +9,10 @@ from .nodes import GenreNode
 from .nodes import PlaylistNode
 from .nodes import SongNode
 from .nodes import TagNode
-from .utils import CachedGraph
 
 __all__ = [
     'GraphBuilder',
+    'CachedGraph',
     'Edge',
     'Graph',
     'Node',
@@ -21,5 +22,4 @@ __all__ = [
     'PlaylistNode',
     'SongNode',
     'TagNode',
-    'CachedGraph',
 ]

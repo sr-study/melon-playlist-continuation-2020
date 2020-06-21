@@ -3,8 +3,8 @@ from ..core import Node
 
 
 class ArtistNode(Node):
-    class Relation:
-        SONG = 1
+    class Relation(Node.Relation):
+        SONG = Node.Relation.auto()
 
     __slots__ = ['name']
 

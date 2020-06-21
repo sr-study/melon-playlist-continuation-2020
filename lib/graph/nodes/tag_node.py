@@ -3,8 +3,8 @@ from ..core import Node
 
 
 class TagNode(Node):
-    class Relation:
-        PLAYLIST = 1
+    class Relation(Node.Relation):
+        PLAYLIST = Node.Relation.auto()
 
     __slots__ = ['name']
 

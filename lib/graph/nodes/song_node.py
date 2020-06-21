@@ -3,12 +3,12 @@ from ..core import Node
 
 
 class SongNode(Node):
-    class Relation:
-        ARTIST = 1
-        ALBUM = 2
-        GENRE = 3
-        DETAILED_GENRE = 4
-        PLAYLIST = 5
+    class Relation(Node.Relation):
+        ARTIST = Node.Relation.auto()
+        ALBUM = Node.Relation.auto()
+        GENRE = Node.Relation.auto()
+        DETAILED_GENRE = Node.Relation.auto()
+        PLAYLIST = Node.Relation.auto()
 
     __slots__ = ['name', 'issue_date']
 
