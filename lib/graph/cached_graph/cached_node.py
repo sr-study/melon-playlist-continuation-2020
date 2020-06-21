@@ -3,10 +3,10 @@ from collections import defaultdict
 
 class CachedNode:
     def __init__(self, index, node):
+        self.index = index
         self.node_class = node.__class__
         self.id = node.id
 
-        self._index = index
         self._edges = []
         self._relation_edges = defaultdict(list)
         self._neighbor_nodes = []
