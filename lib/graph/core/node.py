@@ -1,17 +1,11 @@
 import enum
-from .element import Element
 
 
-class Node(Element):
+class Node:
     class Relation(enum.Enum):
         pass
 
-    __slots__ = ['_id']
+    __slots__ = ['id']
 
-    def __init__(self, graph, id):
-        super().__init__(graph)
-        self._id = id
-
-    @property
-    def id(self):
-        return self._id
+    def __init__(self, id):
+        self.id = id

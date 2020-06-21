@@ -1,11 +1,9 @@
-from .element import Element
-from .node import Node
 from .edge import Edge
 from .graph import Graph
+from .node import Node
 
 __all__ = [
-    'Element',
-    'Node',
     'Edge',
     'Graph',
+    'Node',
 ]
