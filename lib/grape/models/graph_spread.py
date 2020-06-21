@@ -26,15 +26,22 @@ class GraphSpread(BaseModel):
         # like_count = question['like_cnt']
         # update_date = question['updt_date']
 
-        answer_songs, answer_tags = self._predict_songs_and_tags(
+        predicted_songs, predicted_tags = self._predict_songs_and_tags(
             songs=songs,
             tags=tags,
         )
 
+        filtered_songs = remove_seen(
+            predicted_songs[:self._max_songs + len(songs)],
+            songs)[:self._max_songs]
+        filtered_tags = remove_seen(
+            predicted_tags[:self._max_tags + len(tags)],
+            tags)[:self._max_tags]
+
         return {
-            'id': question_id,
-            'songs': answer_songs,
-            'tags': answer_tags,
+            'id': question['id'],
+            'songs': filtered_songs,
+            'tags': filtered_tags,
         }
 
     def _predict_songs_and_tags(self, songs, tags):
@@ -55,13 +62,11 @@ class GraphSpread(BaseModel):
 
         song_scores = scores.filter(lambda k, v: k.node_class == SongNode)
         top_song_ids = convert_to_ids(song_scores.top_keys())
-        predicted_song_ids = remove_seen(top_song_ids, songs)[:self._max_songs]
 
         tag_scores = scores.filter(lambda k, v: k.node_class == TagNode)
         top_tag_ids = convert_to_ids(tag_scores.top_keys())
-        predicted_tag_ids = remove_seen(top_tag_ids, tags)[:self._max_tags]
 
-        return predicted_song_ids, predicted_tag_ids
+        return top_song_ids, top_tag_ids
 
 
 def _move_once(weights, relations=None):
