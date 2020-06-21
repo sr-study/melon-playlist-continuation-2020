@@ -2,7 +2,7 @@ import enum
 
 
 class Node:
-    class Relation(enum.Enum):
+    class Relation:
         pass
 
     __slots__ = ['id']

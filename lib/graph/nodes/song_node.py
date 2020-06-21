@@ -3,12 +3,12 @@ from ..core import Node
 
 
 class SongNode(Node):
-    class Relation(Node.Relation):
-        ARTIST = enum.auto()
-        ALBUM = enum.auto()
-        GENRE = enum.auto()
-        DETAILED_GENRE = enum.auto()
-        PLAYLIST = enum.auto()
+    class Relation:
+        ARTIST = 1
+        ALBUM = 2
+        GENRE = 3
+        DETAILED_GENRE = 4
+        PLAYLIST = 5
 
     __slots__ = ['name', 'issue_date']
 

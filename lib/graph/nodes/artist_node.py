@@ -3,8 +3,8 @@ from ..core import Node
 
 
 class ArtistNode(Node):
-    class Relation(Node.Relation):
-        SONG = enum.auto()
+    class Relation:
+        SONG = 1
 
     __slots__ = ['name']
 

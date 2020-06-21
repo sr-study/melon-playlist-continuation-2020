@@ -3,9 +3,9 @@ from ..core import Node
 
 
 class PlaylistNode(Node):
-    class Relation(Node.Relation):
-        TAG = enum.auto()
-        SONG = enum.auto()
+    class Relation:
+        TAG = 1
+        SONG = 2
 
     __slots__ = ['name', 'like_count', 'update_date']
 

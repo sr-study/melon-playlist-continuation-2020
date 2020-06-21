@@ -3,8 +3,8 @@ from ..core import Node
 
 
 class TagNode(Node):
-    class Relation(Node.Relation):
-        PLAYLIST = enum.auto()
+    class Relation:
+        PLAYLIST = 1
 
     __slots__ = ['name']
 

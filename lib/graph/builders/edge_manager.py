@@ -5,14 +5,14 @@ class EdgeManager:
             self.add_all(edges)
 
     def has(self, src, dst, relation):
-        return (src, dst, relation) in self._edges
+        return (src.id, dst.id, relation) in self._edges
 
     def get(self, src, dst, relation):
-        return self._edges[src, dst, relation]
+        return self._edges[src.id, dst.id, relation]
 
     def add(self, edge):
         if not self.has(edge.src, edge.dst, edge.relation):
-            self._edges[edge.src, edge.dst, edge.relation] = edge
+            self._edges[edge.src.id, edge.dst.id, edge.relation] = edge
 
     def add_all(self, _edges):
         for edge in _edges:
