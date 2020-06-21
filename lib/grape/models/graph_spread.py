@@ -41,8 +41,8 @@ class GraphSpread(BaseModel):
         if not tags and not songs:
             return [], []
 
-        song_nodes = self._graph.get_nodes(SongNode, songs, ignore_none=True)
-        tag_nodes = self._graph.get_nodes(TagNode, tags, ignore_none=True)
+        song_nodes = self._graph.get_nodes(SongNode, songs)
+        tag_nodes = self._graph.get_nodes(TagNode, tags)
 
         scores = ScoreMap(int)
         weights = ScoreMap(int)
@@ -53,11 +53,11 @@ class GraphSpread(BaseModel):
         weights = _move_once(weights)
         scores.add(weights, modify=True)
 
-        song_scores = scores.filter(lambda k, v: k.get_class() == SongNode)
+        song_scores = scores.filter(lambda k, v: k.node_class == SongNode)
         top_song_ids = convert_to_ids(song_scores.top_keys())
         predicted_song_ids = remove_seen(top_song_ids, songs)[:self._max_songs]
 
-        tag_scores = scores.filter(lambda k, v: k.get_class() == TagNode)
+        tag_scores = scores.filter(lambda k, v: k.node_class == TagNode)
         top_tag_ids = convert_to_ids(tag_scores.top_keys())
         predicted_tag_ids = remove_seen(top_tag_ids, tags)[:self._max_tags]
 
