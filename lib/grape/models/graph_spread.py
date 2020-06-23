@@ -13,14 +13,14 @@ from ..utils import get_most_common_keys
 from ..utils import remove_seen
 from ..utils import OrderedSet
 from ..utils import ScoreMap
-
-
+ 
+ 
 class GraphSpread(BaseModel):
     def __init__(self, cached_graph, max_songs, max_tags):
         self._graph = cached_graph
         self._max_songs = max_songs
         self._max_tags = max_tags
-
+ 
     def predict(self, question):
         question_id = question['id']
         songs = question['songs']
@@ -28,60 +28,70 @@ class GraphSpread(BaseModel):
         # title = question['plylst_title']
         # like_count = question['like_cnt']
         update_date = question['updt_date']
-
+ 
         predicted_songs, predicted_tags = self._predict_songs_and_tags(
             songs=songs,
             tags=tags,
             update_date=update_date,
         )
-
+ 
         filtered_songs = remove_seen(
             predicted_songs[:self._max_songs + len(songs)],
             songs)[:self._max_songs]
         filtered_tags = remove_seen(
             predicted_tags[:self._max_tags + len(tags)],
             tags)[:self._max_tags]
-
+ 
         return {
             'id': question['id'],
             'songs': filtered_songs,
             'tags': filtered_tags,
         }
-
+ 
     def _predict_songs_and_tags(self, songs, tags, update_date):
         if not tags and not songs:
             return [], []
-
+ 
         song_nodes = self._graph.get_nodes(SongNode, songs)
         tag_nodes = self._graph.get_nodes(TagNode, tags)
-
+ 
         allowed_relations = _get_all_relations() - set([
             SongNode.Relation.GENRE,
-            SongNode.Relation.DETAILED_GENRE,
+            # SongNode.Relation.DETAILED_GENRE,
             SongNode.Relation.ARTIST,
             # SongNode.Relation.ALBUM,
         ])
-
+ 
         scores = ScoreMap(int)
         weights = ScoreMap(int)
         weights = weights.increase(song_nodes, 1, True)
         weights = weights.increase(tag_nodes, 1, True)
-
+ 
         weights = _move_once(weights, allowed_relations)
         weights = ScoreMap(int, dict(weights.top(20)))
         weights = _move_once(weights, allowed_relations)
         scores.add(weights, True)
-
+ 
         song_scores = scores.filter(lambda k, v: k.node_class == SongNode)
-        # song_scores = song_scores.filter(lambda k, v: k.issue_date[:4] <= update_date[:4])
+ 
+        song_scores = song_scores.filter(lambda k, v: k.issue_date[:4] <= update_date[:4])
+        song_scores = song_scores.filter(lambda k, v: True if k.issue_date[4:6] != "00" else k.issue_date[:6] <= update_date[:6])
+        song_scores = song_scores.filter(lambda k, v: True if k.issue_date[6:8] != "00" else k.issue_date[:8] <= update_date[:8])
+        # song_scores = song_scores.filter(
+        #     lambda k, v:
+        #     k.issue_date[:8] <= update_date[:8] if k.issue_date[6:8] != "00" else
+        #     k.issue_date[:6] <= update_date[:6] if k.issue_date[4:6] != "00" else
+        #     k.issue_date[:4] <= update_date[:4] if k.issue_date[0:4] != "0000" else
+        #     True)
+ 
         top_song_ids = convert_to_ids(song_scores.top_keys())
-
+ 
         tag_scores = scores.filter(lambda k, v: k.node_class == TagNode)
         top_tag_ids = convert_to_ids(tag_scores.top_keys())
-
+ 
         return top_song_ids, top_tag_ids
-
-
+ 
+ 
 def _move_once(weights, relations=None):
     next_weights = ScoreMap(int)
     if relations is None:
@@ -94,13 +104,13 @@ def _move_once(weights, relations=None):
             for relation in relations:
                 for next_node in node.get_related_nodes(relation):
                     next_nodes.append(next_node)
-
+ 
             for next_node in next_nodes:
                 next_weights[next_node] += weight
-
+ 
     return next_weights
-
-
+ 
+ 
 def _get_all_relations():
     return set([
         AlbumNode.Relation.SONG,
