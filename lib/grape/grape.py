@@ -66,6 +66,7 @@ def _cache_union_nodes(graph):
         if node.node_class == SongNode:
             artists = node.get_related_nodes(SongNode.Relation.ARTIST)
             genres = node.get_related_nodes(SongNode.Relation.GENRE)
+            detailed_genres = node.get_related_nodes(SongNode.Relation.DETAILED_GENRE)
             for artist in artists:
                 for genre in genres:
                     if graph.has_node((ArtistNode, GenreNode), (artist.id, genre.id)):
@@ -74,4 +75,13 @@ def _cache_union_nodes(graph):
                         union = UnionNode(len(graph.nodes), [artist, genre])
                         graph.add_node(union)
                     graph.add_edge(CachedEdge(node, union, (SongNode.Relation.ARTIST, SongNode.Relation.GENRE)))
+                    graph.add_edge(CachedEdge(union, node, (ArtistNode.Relation.SONG, GenreNode.Relation.SONG)))
+                    
+                for genre in detailed_genres:
+                    if graph.has_node((ArtistNode, GenreNode), (artist.id, genre.id)):
+                        union = graph.get_node((ArtistNode, GenreNode), (artist.id, genre.id))
+                    else:
+                        union = UnionNode(len(graph.nodes), [artist, genre])
+                        graph.add_node(union)
+                    graph.add_edge(CachedEdge(node, union, (SongNode.Relation.ARTIST, SongNode.Relation.DETAILED_GENRE)))
                     graph.add_edge(CachedEdge(union, node, (ArtistNode.Relation.SONG, GenreNode.Relation.SONG)))

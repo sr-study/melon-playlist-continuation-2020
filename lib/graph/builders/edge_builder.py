@@ -80,7 +80,7 @@ class EdgeBuilder:
                 edges.add(Edge(
                     src=song_node,
                     dst=genre_node,
-                    relation=SongNode.Relation.GENRE,
+                    relation=SongNode.Relation.DETAILED_GENRE,
                 ))
                 edges.add(Edge(
                     src=genre_node,
