@@ -21,9 +21,13 @@ class ArenaEvaluator:
         return dcg / self._idcgs[len(gt)]
 
     def _eval(self, gt_fname, rec_fname):
-        gt_playlists = load_json(gt_fname)
-        gt_dict = {g["id"]: g for g in gt_playlists}
         rec_playlists = load_json(rec_fname)
+        gt_playlists = load_json(gt_fname)
+        if len(gt_playlists) > len(rec_playlists):
+            print("[Warning] 제출한 정답이 부족합니다. "
+                  "제출한 문제만 채점합니다.")
+            gt_playlists = gt_playlists[:len(rec_playlists)]
+        gt_dict = {g["id"]: g for g in gt_playlists}
 
         gt_ids = set([g["id"] for g in gt_playlists])
         rec_ids = set([r["id"] for r in rec_playlists])
