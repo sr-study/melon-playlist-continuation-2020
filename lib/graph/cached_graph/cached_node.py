@@ -45,3 +45,6 @@ class CachedNode:
         class_name = self.__class__.__name__
         node_class_name = self.node_class.__qualname__
         return f"<{class_name}({node_class_name}) object at {hex(id(self))}>"
+
+    def __hash__(self):
+        return self.index
