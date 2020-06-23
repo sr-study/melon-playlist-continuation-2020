@@ -1,3 +1,4 @@
+from tqdm import tqdm
 from lib.graph import CachedGraph
 from .models import BaseModel
 from .models import GraphSpread
@@ -25,6 +26,8 @@ class Grape(BaseModel):
             self._max_tags,
         )
 
+        _cache_union_nodes(self._graph)
+
     def fit(self, playlists):
         self._most_popular.fit(playlists)
         return self
@@ -50,3 +53,25 @@ class Grape(BaseModel):
             'songs': answer_songs,
             'tags': answer_tags,
         }
+
+
+def _cache_union_nodes(graph):
+    from lib.graph import ArtistNode
+    from lib.graph import GenreNode
+    from lib.graph import SongNode
+    from lib.graph import UnionNode
+    from lib.graph import CachedEdge
+
+    for node in tqdm(graph.nodes, "Caching union nodes"):
+        if node.node_class == SongNode:
+            artists = node.get_related_nodes(SongNode.Relation.ARTIST)
+            genres = node.get_related_nodes(SongNode.Relation.GENRE)
+            for artist in artists:
+                for genre in genres:
+                    if graph.has_node((ArtistNode, GenreNode), (artist.id, genre.id)):
+                        union = graph.get_node((ArtistNode, GenreNode), (artist.id, genre.id))
+                    else:
+                        union = UnionNode(len(graph.nodes), [artist, genre])
+                        graph.add_node(union)
+                    graph.add_edge(CachedEdge(node, union, (SongNode.Relation.ARTIST, SongNode.Relation.GENRE)))
+                    graph.add_edge(CachedEdge(union, node, (ArtistNode.Relation.SONG, GenreNode.Relation.SONG)))

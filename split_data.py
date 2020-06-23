@@ -10,7 +10,7 @@ from utils import write_json
 
 
 class ArenaSplitter:
-    def run(self, fname, ratio=0.2):
+    def run(self, fname, ratio=0.2, suffix=''):
         seed = 777
 
         print("Reading data...\n")
@@ -23,8 +23,8 @@ class ArenaSplitter:
             .set_ratio(ratio) \
             .split(playlists)
 
-        write_json(train, "arena_data/orig/train.json")
-        write_json(val, "arena_data/orig/val.json")
+        write_json(train, f"arena_data/orig/train{suffix}.json")
+        write_json(val, f"arena_data/orig/val{suffix}.json")
 
         print("Generating questions...")
         questions, answers = QuestionGenerator() \
@@ -41,8 +41,8 @@ class ArenaSplitter:
             }) \
             .generate(val)
 
-        write_json(questions, "arena_data/questions/val.json")
-        write_json(answers, "arena_data/answers/val.json")
+        write_json(questions, f"arena_data/questions/val{suffix}.json")
+        write_json(answers, f"arena_data/answers/val{suffix}.json")
 
         counts = count_questions_by_type(questions)
         print(", ".join([f"{t.name}: {n}" for t, n in counts.items()]))

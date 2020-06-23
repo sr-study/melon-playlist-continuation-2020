@@ -23,8 +23,8 @@ class GrapeRecommender:
         train_data = read_json(train_fname)
 
         print("Building graph...")
-        graph = lib.graph.GraphBuilder(song_meta, genre_data, train_data) \
-            .build()
+        graph = lib.graph.GraphBuilder() \
+            .build(song_meta, genre_data, train_data)
 
         print("Fitting train data...")
         grape = lib.grape.Grape(

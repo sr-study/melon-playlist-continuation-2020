@@ -1,8 +1,11 @@
 from tqdm import tqdm
 from lib.graph import CachedGraph
+from lib.graph import AlbumNode
+from lib.graph import ArtistNode
+from lib.graph import GenreNode
+from lib.graph import PlaylistNode
 from lib.graph import SongNode
 from lib.graph import TagNode
-from lib.graph import PlaylistNode
 from .base import BaseModel
 from ..utils import merge_unique_lists
 from ..utils import convert_to_ids
@@ -24,11 +27,12 @@ class GraphSpread(BaseModel):
         tags = question['tags']
         # title = question['plylst_title']
         # like_count = question['like_cnt']
-        # update_date = question['updt_date']
+        update_date = question['updt_date']
 
         predicted_songs, predicted_tags = self._predict_songs_and_tags(
             songs=songs,
             tags=tags,
+            update_date=update_date,
         )
 
         filtered_songs = remove_seen(
@@ -44,23 +48,32 @@ class GraphSpread(BaseModel):
             'tags': filtered_tags,
         }
 
-    def _predict_songs_and_tags(self, songs, tags):
+    def _predict_songs_and_tags(self, songs, tags, update_date):
         if not tags and not songs:
             return [], []
 
         song_nodes = self._graph.get_nodes(SongNode, songs)
         tag_nodes = self._graph.get_nodes(TagNode, tags)
 
+        allowed_relations = _get_all_relations() - set([
+            SongNode.Relation.GENRE,
+            SongNode.Relation.DETAILED_GENRE,
+            SongNode.Relation.ARTIST,
+            # SongNode.Relation.ALBUM,
+        ])
+
         scores = ScoreMap(int)
         weights = ScoreMap(int)
-        weights.increase(song_nodes, 1, modify=True)
-        weights.increase(tag_nodes, 1, modify=True)
+        weights = weights.increase(song_nodes, 1, True)
+        weights = weights.increase(tag_nodes, 1, True)
 
-        weights = ScoreMap(int, dict(_move_once(weights).top(20)))
-        weights = _move_once(weights)
-        scores.add(weights, modify=True)
+        weights = _move_once(weights, allowed_relations)
+        weights = ScoreMap(int, dict(weights.top(20)))
+        weights = _move_once(weights, allowed_relations)
+        scores.add(weights, True)
 
         song_scores = scores.filter(lambda k, v: k.node_class == SongNode)
+        # song_scores = song_scores.filter(lambda k, v: k.issue_date[:4] <= update_date[:4])
         top_song_ids = convert_to_ids(song_scores.top_keys())
 
         tag_scores = scores.filter(lambda k, v: k.node_class == TagNode)
@@ -86,3 +99,21 @@ def _move_once(weights, relations=None):
                 next_weights[next_node] += weight
 
     return next_weights
+
+
+def _get_all_relations():
+    return set([
+        AlbumNode.Relation.SONG,
+        ArtistNode.Relation.SONG,
+        GenreNode.Relation.SONG,
+        PlaylistNode.Relation.SONG,
+        PlaylistNode.Relation.TAG,
+        SongNode.Relation.ALBUM,
+        SongNode.Relation.ARTIST,
+        SongNode.Relation.DETAILED_GENRE,
+        SongNode.Relation.GENRE,
+        SongNode.Relation.PLAYLIST,
+        TagNode.Relation.PLAYLIST,
+        (SongNode.Relation.ARTIST, SongNode.Relation.GENRE),
+        (ArtistNode.Relation.SONG, GenreNode.Relation.SONG),
+    ])
