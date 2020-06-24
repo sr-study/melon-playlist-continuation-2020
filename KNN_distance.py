@@ -189,11 +189,8 @@ class KNN_distance:
                         if tag_q in tag_t or tag_t in tag_q:
                             if tag_t ==tag_q:
                                 intersect_num += 6
-                                if tag_only:
-                                    break
                             else:
-                                if not tag_only:
-                                    intersect_num += 2
+                                intersect_num += 2
 
                 for word in my_title:
                     if word in title_lists[idx]:
