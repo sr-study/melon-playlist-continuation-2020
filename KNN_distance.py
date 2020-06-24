@@ -11,7 +11,7 @@ from arena_util import remove_seen
 from arena_util import most_popular
 
 
-class GenreMostPopular:
+class KNN_distance:
     def _song_mp_per_genre(self, song_meta, global_mp):
         res = {}
 
@@ -235,4 +235,4 @@ class GenreMostPopular:
 
 
 if __name__ == "__main__":
-    fire.Fire(GenreMostPopular)
+    fire.Fire(KNN_distance)

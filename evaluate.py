@@ -63,19 +63,23 @@ class ArenaEvaluator:
             tag_len =len(q_dict[id]['tags'])
             song_len = len(q_dict[id]['songs'])
             title_len = len(q_dict[id]['plylst_title'])
+
+            #song
             if song_len!=0 and tag_len ==0 and title_len==0:
                 return 0
-
-            elif song_len!=0 and tag_len !=0 and title_len==0:
+            #song tag
+            if song_len!=0 and tag_len !=0 and title_len==0:
                 return 1
-
-            elif song_len==0 and tag_len !=0 and title_len!=0:
+            #tag title
+            if song_len==0 and tag_len !=0 and title_len!=0:
                 return 2
-            elif song_len==0 and tag_len ==0 and title_len!=0:
+            #title
+            if song_len==0 and tag_len ==0 and title_len!=0:
                 return 3
 
 
         for rec in rec_playlists:
+
             gt = gt_dict[rec["id"]]
             cur_music_ndcg = self._ndcg(gt["songs"], rec["songs"][:100])
             cur_tag_ndcg = self._ndcg(gt["tags"], rec["tags"][:10])
@@ -109,7 +113,7 @@ class ArenaEvaluator:
             print(f"Tag nDCG: {tag_ndcg:.6}")
             print(f"Score: {score:.6}")
 
-            case_titles =['song only','song tag','title tag','title only']
+            case_titles =['song only','song tag','tag title','title only']
             for idx , case_title in enumerate(case_titles):
                 print(f'#### {case_title}')
                 print(f"Music nDCG: {case_music[idx]:.6}")

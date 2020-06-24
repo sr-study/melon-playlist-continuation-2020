@@ -12,8 +12,8 @@ from arena_util import write_json
 class ArenaSplitter:
     def _split_data(self, playlists):
         tot = len(playlists)
-        train = playlists[:int(tot*0.90)]
-        val = playlists[int(tot*0.90):]
+        train = playlists[:int(tot*0.995)]
+        val = playlists[int(tot*0.995):]
 
         return train, val
 
@@ -23,7 +23,10 @@ class ArenaSplitter:
 
         for i in range(len(playlists)):
             for del_col in del_cols:
-                q_pl[i][del_col] = []
+                if del_col == 'plylst_title':
+                    q_pl[i][del_col] = ""
+                else :
+                    q_pl[i][del_col] = []
                 if del_col == 'songs':
                     a_pl[i][del_col] = a_pl[i][del_col][:100]
                 elif del_col == 'tags':
@@ -54,8 +57,8 @@ class ArenaSplitter:
               f"Tags only: {len(tags_only)}, "
               f"Title only: {len(title_only)}")
 
-        song_q, song_a = self._mask(song_only, ['songs'], ['tags'])
-        songtag_q, songtag_a = self._mask(song_and_tags, ['songs', 'tags'], [])
+        song_q, song_a = self._mask(song_only, ['songs'], ['tags','plylst_title'])
+        songtag_q, songtag_a = self._mask(song_and_tags, ['songs', 'tags'], ['plylst_title'])
         tag_q, tag_a = self._mask(tags_only, ['tags'], ['songs'])
         title_q, title_a = self._mask(title_only, [], ['songs', 'tags'])
 
