@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import fire
 import numpy as np
 
@@ -63,16 +62,16 @@ class ArenaEvaluator:
         def check_case (id):
             tag_len =len(q_dict[id]['tags'])
             song_len = len(q_dict[id]['songs'])
-
-            if song_len !=0 and tag_len!=0:
+            title_len = len(q_dict[id]['plylst_title'])
+            if song_len!=0 and tag_len ==0 and title_len==0:
                 return 0
 
-            elif song_len ==0 and tag_len!=0:
+            elif song_len!=0 and tag_len !=0 and title_len==0:
                 return 1
 
-            elif song_len !=0 and tag_len==0:
+            elif song_len==0 and tag_len !=0 and title_len!=0:
                 return 2
-            elif song_len ==0 and tag_len==0:
+            elif song_len==0 and tag_len ==0 and title_len!=0:
                 return 3
 
 
@@ -110,7 +109,7 @@ class ArenaEvaluator:
             print(f"Tag nDCG: {tag_ndcg:.6}")
             print(f"Score: {score:.6}")
 
-            case_titles =['song + tag','tag','song','x (title only)']
+            case_titles =['song only','song tag','title tag','title only']
             for idx , case_title in enumerate(case_titles):
                 print(f'#### {case_title}')
                 print(f"Music nDCG: {case_music[idx]:.6}")

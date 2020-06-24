@@ -1,11 +1,6 @@
 
 
-### weighted_grpah는 쓰레기로 판명났습니다.
 
-### nns_enseble_with_artist.py에서 계속 이것 저것 바꿔 볼 예정 입니다.
-
-
-# 요약
 
 music score
 

@@ -12,8 +12,8 @@ from arena_util import write_json
 class ArenaSplitter:
     def _split_data(self, playlists):
         tot = len(playlists)
-        train = playlists[:int(tot*0.2)]
-        val = playlists[int(tot*0.8):]
+        train = playlists[:int(tot*0.90)]
+        val = playlists[int(tot*0.90):]
 
         return train, val
 
