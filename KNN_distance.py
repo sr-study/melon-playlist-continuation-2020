@@ -192,9 +192,13 @@ class KNN_distance:
                             else:
                                 intersect_num += 2
 
-                for word in my_title:
-                    if word in title_lists[idx]:
-                        intersect_num += 3
+                for word_q in my_title:
+                     for word_t in title_lists[idx]:
+                        if word_q in word_t or word_t in word_q:
+                            if word_q ==word_t:
+                                intersect_num += 2
+                            else:
+                                intersect_num += 1
 
                 sorted_list.append([intersect_num, idx])
 
