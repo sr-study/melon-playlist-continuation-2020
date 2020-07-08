@@ -149,8 +149,12 @@ class GenreMostPopular:
             my_tags = q['tags']
             cur_date = datetime.strptime(q['updt_date'][:10], '%Y-%m-%d')
             tag_only = False
+            title_only = False
             if len(my_songs) == 0 and len(my_tags) != 0:
                 tag_only = True
+
+            if len(my_songs) == 0 and len(my_tags) == 0:
+                title_only = True
 
             my_title = q['plylst_title'].split(' ')
             my_artists_counter = Counter()
@@ -171,7 +175,10 @@ class GenreMostPopular:
                         intersect_num += 10
 
                 for tag_q in my_tags:
-
+                    if title_only:
+                        for word in title_lists[idx]:
+                            if tag_q in word:
+                                intersect_num += 6
                     for tag_t in tag_sets[idx]:
                         if tag_q in tag_t or tag_t in tag_q:
                             if tag_t == tag_q:
@@ -183,8 +190,25 @@ class GenreMostPopular:
                                     intersect_num += 2
 
                 for word in my_title:
-                    if word in title_lists[idx]:
-                        intersect_num += 3
+                    if title_only:
+                        for word_t in title_lists[idx]:
+                            if word == word_t:
+                                if len(word) > 2:
+                                    intersect_num += 3
+                                else:
+                                    intersect_num += 1
+                            elif word in word_t:
+                                intersect_num += 1
+                    else:
+                        if word in title_lists[idx]:
+                            intersect_num += 3
+                if title_only:
+                    for word in my_title:
+                        for tag_t in tag_sets[idx]:
+                            if word == tag_t:
+                                intersect_num += 6
+                            elif (len(word) > 2) and ((word in tag_t) or (tag_t in word)):
+                                intersect_num += 1
 
                 sorted_list.append([intersect_num, idx])
 

@@ -44,4 +44,28 @@ tag title artist genrle 유사도 제거
 
 tag title artist genrle 유사도 추가 
 
+##실험 5
+title only 추가
+
+### 우리 valid 점수
+Total score
+Music nDCG: 0.264713
+Tag nDCG: 0.476756
+Score: 0.296519
+
+
+
+#### song only
+Music nDCG: 0.291868
+Tag nDCG: 0.514128
+
+#### song tag
+Music nDCG: 0.315392
+Tag nDCG: 0.455831
+#### tag title
+Music nDCG: 0.108201
+Tag nDCG: 0.511789
+#### title only
+Music nDCG: 0.122921
+Tag nDCG: 0.3184
 
