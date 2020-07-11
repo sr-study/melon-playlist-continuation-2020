@@ -138,7 +138,9 @@ class GenreMostPopular:
                 if (tag not in my_tags) and (tag not in rec_tag_list):
                     rec_tag_list.append(tag)
 
-    def _generate_answers(self, song_meta_json, train, questions):
+    def _generate_answers(self, song_meta_json, train, questions, p_idx=0, return_dict=None):
+        if return_dict is None:
+            return_dict = dict()
         song_meta = {int(song["id"]): song for song in song_meta_json}
         song_sets, tag_sets, title_lists = self._train_playlist(train)
 
@@ -227,7 +229,7 @@ class GenreMostPopular:
                 "songs": rec_song_list,
                 "tags": rec_tag_list
             })
-
+        return_dict[p_idx] = answers
         return answers
 
     def run(self, song_meta_fname, train_fname, question_fname):
