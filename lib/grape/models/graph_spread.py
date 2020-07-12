@@ -6,6 +6,8 @@ from lib.graph import GenreNode
 from lib.graph import PlaylistNode
 from lib.graph import SongNode
 from lib.graph import TagNode
+from lib.graph import WordNode
+from lib.graph.utils import get_words
 from .base import BaseModel
 from ..utils import merge_unique_lists
 from ..utils import convert_to_ids
@@ -25,13 +27,14 @@ class GraphSpread(BaseModel):
         question_id = question['id']
         songs = question['songs']
         tags = question['tags']
-        # title = question['plylst_title']
+        title = question['plylst_title']
         # like_count = question['like_cnt']
         update_date = question['updt_date']
 
         predicted_songs, predicted_tags = self._predict_songs_and_tags(
             songs=songs,
             tags=tags,
+            title=title,
             update_date=update_date,
         )
 
@@ -48,12 +51,10 @@ class GraphSpread(BaseModel):
             'tags': filtered_tags,
         }
 
-    def _predict_songs_and_tags(self, songs, tags, update_date):
-        if not tags and not songs:
-            return [], []
-
+    def _predict_songs_and_tags(self, songs, tags, title, update_date):
         song_nodes = self._graph.get_nodes(SongNode, songs)
         tag_nodes = self._graph.get_nodes(TagNode, tags)
+        word_nodes = self._graph.get_nodes(WordNode, get_words(title))
 
         relation_weights = _get_relation_weight()
 
@@ -61,6 +62,7 @@ class GraphSpread(BaseModel):
         weights = ScoreMap(int)
         weights = weights.increase(song_nodes, 1, True)
         weights = weights.increase(tag_nodes, 1, True)
+        weights = weights.increase(word_nodes, 1, True)
 
         for _i in range(8):
             weights = _move_once_weight(weights, relation_weights)
@@ -97,12 +99,16 @@ def _get_relation_weight():
         GenreNode.Relation.SONG: c * 1,
         PlaylistNode.Relation.SONG: c * 1,
         PlaylistNode.Relation.TAG: c * 2.5,
+        PlaylistNode.Relation.WORD: c * 2.5,
         SongNode.Relation.ALBUM: c * 1.5,
         SongNode.Relation.ARTIST: c * 1.5,
         SongNode.Relation.DETAILED_GENRE: c * 0,
         SongNode.Relation.GENRE: c * 0,
         SongNode.Relation.PLAYLIST: c * 0.75,
         TagNode.Relation.PLAYLIST: c * 1,
+        TagNode.Relation.WORD: c * 1,
+        WordNode.Relation.PLAYLIST: c * 1,
+        WordNode.Relation.TAG: c * 1,
         (SongNode.Relation.ARTIST, SongNode.Relation.GENRE): c * 0,
         (SongNode.Relation.ARTIST, SongNode.Relation.DETAILED_GENRE): c * 1.5,
         (ArtistNode.Relation.SONG, GenreNode.Relation.SONG): c * 1,

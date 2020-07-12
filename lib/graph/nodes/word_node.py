@@ -2,10 +2,10 @@ import enum
 from ..core import Node
 
 
-class TagNode(Node):
+class WordNode(Node):
     class Relation(Node.Relation):
         PLAYLIST = Node.Relation.auto()
-        WORD = Node.Relation.auto()
+        TAG = Node.Relation.auto()
 
     __slots__ = ['name']
 

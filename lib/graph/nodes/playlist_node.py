@@ -6,6 +6,7 @@ class PlaylistNode(Node):
     class Relation(Node.Relation):
         TAG = Node.Relation.auto()
         SONG = Node.Relation.auto()
+        WORD = Node.Relation.auto()
 
     __slots__ = ['name', 'like_count', 'update_date']
 

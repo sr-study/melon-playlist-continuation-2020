@@ -6,6 +6,8 @@ from ..nodes import GenreNode
 from ..nodes import PlaylistNode
 from ..nodes import SongNode
 from ..nodes import TagNode
+from ..nodes import WordNode
+from ..utils import get_words
 from .node_manager import NodeManager
 
 
@@ -78,6 +80,18 @@ class NodeBuilder:
                 nodes.add(TagNode(
                     id=tag,
                     name=tag,
+                ))
+
+                for word in get_words(tag):
+                    nodes.add(WordNode(
+                        id=word,
+                        name=word,
+                    ))
+
+            for word in get_words(playlist['plylst_title']):
+                nodes.add(WordNode(
+                    id=word,
+                    name=word,
                 ))
 
             pbar.update()
