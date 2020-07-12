@@ -1,6 +1,6 @@
 import fire
 import numpy as np
-
+import pandas as pd
 from arena_util import load_json
 
 
@@ -59,6 +59,8 @@ class ArenaEvaluator:
         case_tag = [0.0, 0.0, 0.0, 0.0]
         case_count =[0, 0, 0, 0]
 
+        case_song_len= [0,0,0,0]
+        case_tag_len = [0, 0, 0, 0]
         def check_case (id):
             tag_len =len(q_dict[id]['tags'])
             song_len = len(q_dict[id]['songs'])
@@ -77,7 +79,7 @@ class ArenaEvaluator:
             if song_len==0 and tag_len ==0 and title_len!=0:
                 return 3
 
-
+        result_df = pd.DataFrame(columns=['question','answer','my_answer','song_size','tag_size','case_id','song_score','tag_score'])
         for rec in rec_playlists:
 
             gt = gt_dict[rec["id"]]
@@ -91,11 +93,22 @@ class ArenaEvaluator:
             case_tag[case_id] += cur_tag_ndcg
             case_count[case_id] += 1
 
+            case_song_len[case_id]+=len(q_dict[rec['id']]['songs'])
+            case_tag_len[case_id]+=len(q_dict[rec['id']]['tags'])
+
+            result_df.loc[len(result_df)] =[q_dict[rec['id']],gt,rec,len(q_dict[rec['id']]['songs']),len(q_dict[rec['id']]['tags']),case_id,cur_music_ndcg,cur_tag_ndcg]
 
         for idx in range(4):
-            case_music[idx]=case_music[idx]/case_count[idx]
-            case_tag[idx] =case_tag[idx]/case_count[idx]
+            if case_count[idx]!=0:
+                case_music[idx]=case_music[idx]/case_count[idx]
+                case_tag[idx] =case_tag[idx]/case_count[idx]
+                case_song_len[idx]=case_song_len[idx]/case_count[idx]
+                case_tag_len[idx] = case_tag_len[idx] / case_count[idx]
 
+            print(f'song count : {case_song_len[idx]} case_id : {idx}')
+            print(f'tag count : {case_tag_len[idx]} case_id : {idx}')
+
+        result_df.to_csv('./arena_data/reslut.csv',index=False)
         music_ndcg = music_ndcg / len(rec_playlists)
         tag_ndcg = tag_ndcg / len(rec_playlists)
         score = music_ndcg * 0.85 + tag_ndcg * 0.15

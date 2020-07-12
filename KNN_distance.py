@@ -113,18 +113,18 @@ class KNN_distance:
             dtl_gnl_score = 0
             album_score = 0
 
-            if self.artists_lists_size[idx] != 0 and self.artist_size != 0:
-                artist_score = self.dot(self.artists_counter, self.artists_lists[idx]) / self.artists_lists_size[
-                    idx] / self.artist_size
-            if self.gen_list_size[idx] != 0 and self.genres_size != 0:
-                gnl_score = self.dot(self.genres_counter, self.gen_list[idx]) / self.gen_list_size[idx] / self.genres_size
-            if self.detail_gen_list_size[idx] != 0 and self.dtl_genre_size != 0:
-                dtl_gnl_score = self.dot(self.dtl_genres_counter, self.detail_gen_list[idx]) / self.detail_gen_list_size[
-                    idx] / self.dtl_genre_size
-
-            if self.artists_lists_size[idx] != 0 and self.album_size != 0:
-                album_score = self.dot(self.album_counter, self.album_list[idx]) / self.artists_lists_size[idx] / self.album_size
-            score = sorted_list[i][0] *( 1* dtl_gnl_score + 1 * gnl_score + 1 * album_score + 1 * artist_score)
+            # if self.artists_lists_size[idx] != 0 and self.artist_size != 0:
+            #     artist_score = self.dot(self.artists_counter, self.artists_lists[idx]) / self.artists_lists_size[
+            #         idx] / self.artist_size
+            # if self.gen_list_size[idx] != 0 and self.genres_size != 0:
+            #     gnl_score = self.dot(self.genres_counter, self.gen_list[idx]) / self.gen_list_size[idx] / self.genres_size
+            # if self.detail_gen_list_size[idx] != 0 and self.dtl_genre_size != 0:
+            #     dtl_gnl_score = self.dot(self.dtl_genres_counter, self.detail_gen_list[idx]) / self.detail_gen_list_size[
+            #         idx] / self.dtl_genre_size
+            #
+            # if self.artists_lists_size[idx] != 0 and self.album_size != 0:
+            #     album_score = self.dot(self.album_counter, self.album_list[idx]) / self.artists_lists_size[idx] / self.album_size
+            score = sorted_list[i][0] #*( 1* dtl_gnl_score + 1 * gnl_score + 1 * album_score + 1 * artist_score)
             weight.append(score)
 
         for i in range(K):

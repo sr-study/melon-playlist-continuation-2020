@@ -3,7 +3,7 @@ from collections import Counter
 
 import fire
 from tqdm import tqdm
-
+import math
 from arena_util import load_json
 from arena_util import write_json
 from datetime import datetime
@@ -44,10 +44,10 @@ class GenreMostPopular:
         song_weights = Counter()
 
 
-        for i in range(20):
+        for i in range(30):
             weight.append(sorted_list[i][0])
 
-        for i in range(20):
+        for i in range(30):
             if sorted_list[i][0] == 0:
                 break
             cur_playlist = song_sets[sorted_list[i][1]]
@@ -79,7 +79,7 @@ class GenreMostPopular:
 
                     for artist in cur_artists:
                         if artist in my_artists_counter:
-                            song_weights[song] += weight[i]  * (my_artists_counter[artist])/(sum(my_artists_counter.values()))
+                            song_weights[song] += weight[i]* (my_artists_counter[artist])/(sum(my_artists_counter.values()))
                             break
 
 
@@ -178,28 +178,43 @@ class GenreMostPopular:
             sorted_list = []
 
             for idx, song_set in enumerate(song_sets):
-                intersect_num = 0
+                play_list_score = 0
+
+                songs_score = 0
                 for song in my_songs:
                     if song in song_set:
-                        intersect_num += 10
+                        songs_score += 1
 
+                if len(my_songs)!=0:
+                    #0.001 15가 best
+                    songs_score =songs_score/(0.001 +math.log(len(song_set)))
+
+                play_list_score += songs_score*15
+
+
+
+
+                tag_score = 0
                 for tag_q in my_tags:
 
                     for tag_t in tag_sets[idx]:
                         if tag_q in tag_t or tag_t in tag_q:
                             if tag_t ==tag_q:
-                                intersect_num += 6
+                                tag_score += 6
                                 if tag_only:
                                     break
                             else:
                                 if not tag_only:
-                                    intersect_num += 2
+                                    tag_score += 2
 
+                play_list_score+=tag_score
+
+                title_score = 0
                 for word in my_title:
                     if word in title_lists[idx]:
-                        intersect_num += 3
-
-                sorted_list.append([intersect_num, idx])
+                        title_score  += 1
+                play_list_score += 3* title_score
+                sorted_list.append([play_list_score, idx])
 
 
             sorted_list.sort(key=lambda x: x[0], reverse=True)
