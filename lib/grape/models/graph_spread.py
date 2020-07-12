@@ -108,7 +108,7 @@ def _get_relation_weight():
         TagNode.Relation.PLAYLIST: c * 1,
         TagNode.Relation.WORD: c * 1,
         WordNode.Relation.PLAYLIST: c * 1,
-        WordNode.Relation.TAG: c * 1,
+        WordNode.Relation.TAG: c * 0.1,
         (SongNode.Relation.ARTIST, SongNode.Relation.GENRE): c * 0,
         (SongNode.Relation.ARTIST, SongNode.Relation.DETAILED_GENRE): c * 1.5,
         (ArtistNode.Relation.SONG, GenreNode.Relation.SONG): c * 1,
