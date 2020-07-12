@@ -29,15 +29,19 @@ class GenreMostPopular:
         tag_lists = []
         song_lists = []
         title_lists = []
+        song_popularity = Counter()
         for t in train:
             tag_lists.append(set(t['tags']))
             song_lists.append(set(t['songs']))
             title_lists.append(t['plylst_title'].split(' '))
 
-        return song_lists, tag_lists, title_lists
+            for song in t['songs']:
+                song_popularity[song] += 1
 
-    def _get_song_recommends(self, song_sets, my_songs, sorted_list, my_artists_counter, my_genres_counter, song_meta,
-                             cur_date):
+        return song_lists, tag_lists, title_lists, song_popularity
+
+    def _get_song_recommends(self, song_sets, my_songs, sorted_list, my_artists_counter, my_genres_counter, song_popularity,
+                             song_meta, cur_date):
         rec_song_list = list()
         weight = []
         song_weights = Counter()
@@ -50,7 +54,20 @@ class GenreMostPopular:
                 break
             cur_playlist = song_sets[sorted_list[i][1]]
 
+            max_popularity = 0
             for song in cur_playlist:
+                max_popularity = max(max_popularity, song_popularity[song])
+
+            for song in cur_playlist:
+                # Add popularity to song_weights
+                unit = 0
+                if max_popularity == 0:
+                    unit = 0
+                else:
+                    unit = song_popularity[song] / max_popularity
+
+                eps = unit * (max(1, weight[i] // 4))
+                song_weights[song] += int(eps)
 
                 if song not in my_songs:
                     song_date = song_meta[song]['issue_date']
@@ -142,7 +159,7 @@ class GenreMostPopular:
         if return_dict is None:
             return_dict = dict()
         song_meta = {int(song["id"]): song for song in song_meta_json}
-        song_sets, tag_sets, title_lists = self._train_playlist(train)
+        song_sets, tag_sets, title_lists, song_popularity = self._train_playlist(train)
 
         answers = []
 
@@ -216,7 +233,7 @@ class GenreMostPopular:
 
             sorted_list.sort(key=lambda x: x[0], reverse=True)
             rec_song_list = self._get_song_recommends(song_sets, my_songs, sorted_list, my_artists_counter,
-                                                      my_genres_counter, song_meta, cur_date)
+                                                      my_genres_counter, song_popularity, song_meta, cur_date)
             rec_tag_list = self._get_tag_recommends(tag_sets, my_tags, sorted_list)
 
             if len(rec_song_list) != 100:
