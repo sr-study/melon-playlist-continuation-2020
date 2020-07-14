@@ -69,11 +69,11 @@ def get_last_log(suffix):
 
     files = os.listdir(path)
     files = list(filter(lambda f: f.endswith(suffix), files))
-    files.sort()
-    last_file = files[-1]
+    files = list(map(lambda f: f"{path}/{f}", files))
+    last_file = max(files, key=os.path.getctime)
     
     if last_file:
-        return f"{path}/{last_file}"
+        return last_file
     else:
         return None
 
