@@ -7,6 +7,8 @@ from ..nodes import GenreNode
 from ..nodes import PlaylistNode
 from ..nodes import SongNode
 from ..nodes import TagNode
+from ..nodes import WordNode
+from ..utils import get_words
 from .node_manager import NodeManager
 from .edge_manager import EdgeManager
 
@@ -109,6 +111,19 @@ class EdgeBuilder:
                     relation=TagNode.Relation.PLAYLIST,
                 ))
 
+                for word in get_words(tag):
+                    word_node = nodes.get(WordNode, word)
+                    edges.add(Edge(
+                        src=tag_node,
+                        dst=word_node,
+                        relation=TagNode.Relation.WORD,
+                    ))
+                    edges.add(Edge(
+                        src=word_node,
+                        dst=tag_node,
+                        relation=WordNode.Relation.TAG,
+                    ))
+
             for song in playlist['songs']:
                 song_node = nodes.get(SongNode, song)
                 edges.add(Edge(
@@ -120,6 +135,19 @@ class EdgeBuilder:
                     src=song_node,
                     dst=playlist_node,
                     relation=SongNode.Relation.PLAYLIST,
+                ))
+
+            for word in get_words(playlist['plylst_title']):
+                word_node = nodes.get(WordNode, word)
+                edges.add(Edge(
+                    src=playlist_node,
+                    dst=word_node,
+                    relation=PlaylistNode.Relation.WORD,
+                ))
+                edges.add(Edge(
+                    src=word_node,
+                    dst=playlist_node,
+                    relation=WordNode.Relation.PLAYLIST,
                 ))
 
             pbar.update()

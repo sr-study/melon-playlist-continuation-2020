@@ -12,6 +12,7 @@ from .nodes import GenreNode
 from .nodes import PlaylistNode
 from .nodes import SongNode
 from .nodes import TagNode
+from .nodes import WordNode
 
 __all__ = [
     'GraphBuilder',
@@ -28,4 +29,5 @@ __all__ = [
     'PlaylistNode',
     'SongNode',
     'TagNode',
+    'WordNode',
 ]

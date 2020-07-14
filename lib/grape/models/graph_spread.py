@@ -6,6 +6,8 @@ from lib.graph import GenreNode
 from lib.graph import PlaylistNode
 from lib.graph import SongNode
 from lib.graph import TagNode
+from lib.graph import WordNode
+from lib.graph.utils import get_words
 from .base import BaseModel
 from ..utils import merge_unique_lists
 from ..utils import convert_to_ids
@@ -25,13 +27,14 @@ class GraphSpread(BaseModel):
         question_id = question['id']
         songs = question['songs']
         tags = question['tags']
-        # title = question['plylst_title']
+        title = question['plylst_title']
         # like_count = question['like_cnt']
         update_date = question['updt_date']
 
         predicted_songs, predicted_tags = self._predict_songs_and_tags(
             songs=songs,
             tags=tags,
+            title=title,
             update_date=update_date,
         )
 
@@ -43,34 +46,28 @@ class GraphSpread(BaseModel):
             tags)[:self._max_tags]
 
         return {
-            'id': question['id'],
+            'id': question_id,
             'songs': filtered_songs,
             'tags': filtered_tags,
         }
 
-    def _predict_songs_and_tags(self, songs, tags, update_date):
-        if not tags and not songs:
-            return [], []
-
+    def _predict_songs_and_tags(self, songs, tags, title, update_date):
         song_nodes = self._graph.get_nodes(SongNode, songs)
         tag_nodes = self._graph.get_nodes(TagNode, tags)
+        word_nodes = self._graph.get_nodes(WordNode, get_words(title))
 
-        allowed_relations = _get_all_relations() - set([
-            SongNode.Relation.GENRE,
-            # SongNode.Relation.DETAILED_GENRE,
-            SongNode.Relation.ARTIST,
-            # SongNode.Relation.ALBUM,
-        ])
+        relation_weights = _get_relation_weight()
 
         scores = ScoreMap(int)
         weights = ScoreMap(int)
         weights = weights.increase(song_nodes, 1, True)
         weights = weights.increase(tag_nodes, 1, True)
+        weights = weights.increase(word_nodes, 1, True)
 
-        weights = _move_once(weights, allowed_relations)
-        weights = ScoreMap(int, dict(weights.top(20)))
-        weights = _move_once(weights, allowed_relations)
-        scores.add(weights, True)
+        for _i in range(8):
+            weights = _move_once_weight(weights, relation_weights)
+            scores.add(weights, True)
+            weights = ScoreMap(int, dict(weights.top(20)))
 
         song_scores = scores.filter(lambda k, v: k.node_class == SongNode)
         song_scores = _filter_by_issue_date(song_scores, update_date)
@@ -82,41 +79,40 @@ class GraphSpread(BaseModel):
         return top_song_ids, top_tag_ids
 
 
-def _move_once(weights, relations=None):
+def _move_once_weight(weights, relation_weight):
     next_weights = ScoreMap(int)
-    if relations is None:
-        for node, weight in weights.items():
-            for next_node in node.get_related_nodes():
-                next_weights[next_node] += weight
-    else:
-        for node, weight in weights.items():
-            next_nodes = []
-            for relation in relations:
-                for next_node in node.get_related_nodes(relation):
-                    next_nodes.append(next_node)
-
-            for next_node in next_nodes:
-                next_weights[next_node] += weight
+    for node, weight in weights.items():
+        for relation, w in relation_weight.items():
+            if w == 0:
+                continue
+            for next_node in node.get_related_nodes(relation):
+                next_weights[next_node] += weight * w
 
     return next_weights
 
 
-def _get_all_relations():
-    return set([
-        AlbumNode.Relation.SONG,
-        ArtistNode.Relation.SONG,
-        GenreNode.Relation.SONG,
-        PlaylistNode.Relation.SONG,
-        PlaylistNode.Relation.TAG,
-        SongNode.Relation.ALBUM,
-        SongNode.Relation.ARTIST,
-        SongNode.Relation.DETAILED_GENRE,
-        SongNode.Relation.GENRE,
-        SongNode.Relation.PLAYLIST,
-        TagNode.Relation.PLAYLIST,
-        (SongNode.Relation.ARTIST, SongNode.Relation.GENRE),
-        (ArtistNode.Relation.SONG, GenreNode.Relation.SONG),
-    ])
+def _get_relation_weight():
+    c = 0.01
+    return {
+        AlbumNode.Relation.SONG: c * 1,
+        ArtistNode.Relation.SONG: c * 1,
+        GenreNode.Relation.SONG: c * 1,
+        PlaylistNode.Relation.SONG: c * 1,
+        PlaylistNode.Relation.TAG: c * 2.5,
+        PlaylistNode.Relation.WORD: c * 2.5,
+        SongNode.Relation.ALBUM: c * 1.5,
+        SongNode.Relation.ARTIST: c * 1.5,
+        SongNode.Relation.DETAILED_GENRE: c * 0,
+        SongNode.Relation.GENRE: c * 0,
+        SongNode.Relation.PLAYLIST: c * 0.75,
+        TagNode.Relation.PLAYLIST: c * 1,
+        TagNode.Relation.WORD: c * 1,
+        WordNode.Relation.PLAYLIST: c * 1,
+        WordNode.Relation.TAG: c * 0.1,
+        (SongNode.Relation.ARTIST, SongNode.Relation.GENRE): c * 0,
+        (SongNode.Relation.ARTIST, SongNode.Relation.DETAILED_GENRE): c * 1.5,
+        (ArtistNode.Relation.SONG, GenreNode.Relation.SONG): c * 1,
+    }
 
 
 def _filter_by_issue_date(song_scores, update_date):
