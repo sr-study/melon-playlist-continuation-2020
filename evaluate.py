@@ -1,7 +1,9 @@
 import fire
+import enum
 import numpy as np
-
-from arena_util import load_json
+from collections import defaultdict
+from statistics import mean
+from utils import read_json
 
 
 class ArenaEvaluator:
@@ -19,110 +21,141 @@ class ArenaEvaluator:
 
         return dcg / self._idcgs[len(gt)]
 
-    def _eval(self, gt_fname, rec_fname, rec_full_fname):
-        rec_playlists = load_json(rec_fname)
-        gt_playlists = load_json(gt_fname)
-        if len(gt_playlists) > len(rec_playlists):
-            print("[Warning] 제출한 정답이 부족합니다. "
-                  "제출한 문제만 채점합니다.")
-            gt_playlists = gt_playlists[:len(rec_playlists)]
-        gt_dict = {g["id"]: g for g in gt_playlists}
+    def _eval(self, results, questions, answers):
+        if len(results) < len(answers):
+            print("[Warning] 제출한 정답이 부족합니다.")
 
-        rec_question = load_json(rec_full_fname)
-        q_dict = {g["id"]: g for g in rec_question}
+        questions_dict = {p['id']: p for p in questions}
+        answers_dict = {p['id']: p for p in answers}
 
-        gt_ids = set([g["id"] for g in gt_playlists])
-        rec_ids = set([r["id"] for r in rec_playlists])
+        total_music_ndcgs = list()
+        total_tag_ndcgs = list()
+        total_scores = list()
 
+        case_music_ndcgs = defaultdict(list)
+        case_tag_ndcgs = defaultdict(list)
+        case_scores = defaultdict(list)
 
-        if gt_ids != rec_ids:
-            raise Exception("결과의 플레이리스트 수가 올바르지 않습니다.")
+        for p in results:
+            pid = p['id']
+            songs = p['songs']
+            tags = p['tags']
 
-        rec_song_counts = [len(p["songs"]) for p in rec_playlists]
-        rec_tag_counts = [len(p["tags"]) for p in rec_playlists]
+            if pid not in questions_dict:
+                raise Exception(f"questions에 없습니다: {pid}")
+            if pid not in answers_dict:
+                raise Exception(f"answers 없습니다: {pid}")
 
-        if set(rec_song_counts) != set([100]):
-            raise Exception("추천 곡 결과의 개수가 맞지 않습니다.")
+            question = questions_dict[pid]
+            answer = answers_dict[pid]
+            question_type = get_question_type(question)
 
-        if set(rec_tag_counts) != set([10]):
-            raise Exception("추천 태그 결과의 개수가 맞지 않습니다.")
+            # Validate playlist
+            if len(songs) != 100:
+                raise Exception(f"추천 곡 결과의 개수가 맞지 않습니다: {pid}")
+            if len(tags) != 10:
+                raise Exception(f"추천 태그 결과의 개수가 맞지 않습니다: {pid}")
+            if len(set(songs)) != 100:
+                raise Exception(f"한 플레이리스트에 중복된 곡 추천은 허용되지 않습니다: {pid}")
+            if len(set(tags)) != 10:
+                raise Exception(f"한 플레이리스트에 중복된 태그 추천은 허용되지 않습니다: {pid}")
 
-        rec_unique_song_counts = [len(set(p["songs"])) for p in rec_playlists]
-        rec_unique_tag_counts = [len(set(p["tags"])) for p in rec_playlists]
+            cur_music_ndcg = self._ndcg(answer['songs'], songs)
+            cur_tag_ndcg = self._ndcg(answer['tags'], tags)
+            cur_score = cur_music_ndcg * 0.85 + cur_tag_ndcg * 0.15
 
-        if set(rec_unique_song_counts) != set([100]):
-            raise Exception("한 플레이리스트에 중복된 곡 추천은 허용되지 않습니다.")
+            # Update total score
+            total_music_ndcgs.append(cur_music_ndcg)
+            total_tag_ndcgs.append(cur_tag_ndcg)
+            total_scores.append(cur_score)
 
-        if set(rec_unique_tag_counts) != set([10]):
-            raise Exception("한 플레이리스트에 중복된 태그 추천은 허용되지 않습니다.")
+            # Update case score
+            case_music_ndcgs[question_type].append(cur_music_ndcg)
+            case_tag_ndcgs[question_type].append(cur_tag_ndcg)
+            case_scores[question_type].append(cur_score)
 
-        music_ndcg = 0.0
-        tag_ndcg = 0.0
-
-        case_music = [0.0, 0.0, 0.0, 0.0]
-        case_tag = [0.0, 0.0, 0.0, 0.0]
-        case_count =[0, 0, 0, 0]
-
-        def check_case (id):
-            tag_len =len(q_dict[id]['tags'])
-            song_len = len(q_dict[id]['songs'])
-            title_len = len(q_dict[id]['plylst_title'])
-
-            #song
-            if song_len!=0 and tag_len ==0 and title_len==0:
-                return 0
-            #song tag
-            if song_len!=0 and tag_len !=0 and title_len==0:
-                return 1
-            #tag title
-            if song_len==0 and tag_len !=0 and title_len!=0:
-                return 2
-            #title
-            if song_len==0 and tag_len ==0 and title_len!=0:
-                return 3
-
-
-        for rec in rec_playlists:
-
-            gt = gt_dict[rec["id"]]
-            cur_music_ndcg = self._ndcg(gt["songs"], rec["songs"][:100])
-            cur_tag_ndcg = self._ndcg(gt["tags"], rec["tags"][:10])
-            music_ndcg += cur_music_ndcg
-            tag_ndcg += cur_tag_ndcg
-
-            case_id =check_case(rec['id'])
-            case_music[case_id] += cur_music_ndcg
-            case_tag[case_id] += cur_tag_ndcg
-            case_count[case_id] += 1
-
-
-        for idx in range(4):
-            case_music[idx]=case_music[idx]/case_count[idx]
-            case_tag[idx] =case_tag[idx]/case_count[idx]
-
-        music_ndcg = music_ndcg / len(rec_playlists)
-        tag_ndcg = tag_ndcg / len(rec_playlists)
-        score = music_ndcg * 0.85 + tag_ndcg * 0.15
-
-        return music_ndcg, tag_ndcg, score ,case_music, case_tag
+        return (
+            total_music_ndcgs, total_tag_ndcgs, total_scores,
+            case_music_ndcgs, case_tag_ndcgs, case_scores,
+        )
 
     def evaluate(self, gt_fname, rec_fname, question_fname):
         try:
-            music_ndcg, tag_ndcg, score, case_music, case_tag = self._eval(gt_fname, rec_fname, question_fname)
+            questions = read_json(question_fname)
+            answers = read_json(gt_fname)
+            results = read_json(rec_fname)
 
-            print('Total score')
-            print(f"Music nDCG: {music_ndcg:.6}")
-            print(f"Tag nDCG: {tag_ndcg:.6}")
-            print(f"Score: {score:.6}")
+            (total_music_ndcgs, total_tag_ndcgs, total_scores,
+                case_music_ndcgs, case_tag_ndcgs, case_scores) = self._eval(results, questions, answers)
 
-            case_titles =['song only','song tag','tag title','title only']
-            for idx , case_title in enumerate(case_titles):
-                print(f'#### {case_title}')
-                print(f"Music nDCG: {case_music[idx]:.6}")
-                print(f"Tag nDCG: {case_tag[idx]:.6}")
+            print_scores(
+                total_music_ndcgs, total_tag_ndcgs, total_scores,
+                case_music_ndcgs, case_tag_ndcgs, case_scores,
+            )
 
         except Exception as e:
             print(e)
+
+
+class QuestionType(enum.Enum):
+    ALL = enum.auto()
+    SONG_TAG = enum.auto()
+    SONG_TITLE = enum.auto()
+    TAG_TITLE = enum.auto()
+    SONG_ONLY = enum.auto()
+    TAG_ONLY = enum.auto()
+    TITLE_ONLY = enum.auto()
+    NOTHING = enum.auto()
+
+
+QUESTION_TYPE_MAP = {
+    # (songs, tags, title): question_type
+    (True, True, True): QuestionType.ALL,
+    (True, True, False): QuestionType.SONG_TAG,
+    (True, False, True): QuestionType.SONG_TITLE,
+    (False, True, True): QuestionType.TAG_TITLE,
+    (True, False, False): QuestionType.SONG_ONLY,
+    (False, True, False): QuestionType.TAG_ONLY,
+    (False, False, True): QuestionType.TITLE_ONLY,
+    (False, False, False): QuestionType.NOTHING,
+}
+
+
+def get_question_type(question):
+    songs = question['songs']
+    tags = question['tags']
+    title = question['plylst_title']
+
+    has_songs = len(songs) > 0
+    has_tags = len(tags) > 0
+    has_title = title != ""
+
+    return QUESTION_TYPE_MAP[has_songs, has_tags, has_title]
+
+
+def print_score(music_ndcgs, tag_ndcgs, scores):
+    music_ndcg = mean(music_ndcgs)
+    tag_ndcg = mean(tag_ndcgs)
+    score = mean(scores)
+
+    print(f"Music nDCG: {music_ndcg:.6}")
+    print(f"Tag nDCG: {tag_ndcg:.6}")
+    print(f"Score: {score:.6}")
+
+
+def print_scores(
+        total_music_ndcgs, total_tag_ndcgs, total_scores,
+        case_music_ndcgs, case_tag_ndcgs, case_scores,
+    ):
+    print("=== Total score ===")
+    print_score(total_music_ndcgs, total_tag_ndcgs, total_scores)
+
+    for question_type in QuestionType:
+        if question_type not in case_music_ndcgs:
+            continue
+
+        print(f"=== {question_type.name} score ===")
+        print_score(case_music_ndcgs[question_type], case_tag_ndcgs[question_type], case_scores[question_type])
 
 
 if __name__ == "__main__":
