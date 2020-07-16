@@ -17,6 +17,9 @@ from ..utils import OrderedSet
 from ..utils import ScoreMap
 
 
+DEBUG = False
+
+
 class GraphSpread(BaseModel):
     def __init__(self, cached_graph, max_songs, max_tags):
         self._graph = cached_graph
@@ -65,7 +68,18 @@ class GraphSpread(BaseModel):
         weights = weights.increase(word_nodes, 1, True)
 
         for _i in range(8):
+            if DEBUG:
+                print('=== current weights ===')
+                print_weights(weights)
+                print()
+
             weights = _move_once_weight(weights, relation_weights)
+
+            if DEBUG:
+                print('=== moved weights ===')
+                print_weights(weights)
+                print()
+
             scores.add(weights, True)
             weights = ScoreMap(int, dict(weights.top(20)))
 
@@ -124,3 +138,18 @@ def _filter_by_issue_date(song_scores, update_date):
         k.issue_date[:4] <= update_date[:4] if k.issue_date[0:4] != "0000" else
         True
     )
+
+def print_weights(weights):
+    n = 30
+    i = 0
+    for k, v in dict(weights.top(n + 1)).items():
+        if i < n:
+            i += 1
+        else:
+            print("...")
+            break
+
+        if type(k.node_class) is tuple:
+            print(f"union: {v}")
+        else:
+            print(f"{k.node_class.__name__}({k.id}): {v}")
