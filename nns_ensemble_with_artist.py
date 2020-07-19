@@ -100,28 +100,7 @@ class GenreMostPopular:
 
         for song_pair in song_weights_sorted:
             if len(rec_song_list) == 100:
-                visited_percent = len(visited_result) / len(ans['songs'])
-                visited_percent_list.append(visited_percent)
-
-                found_cnt = 0
-                for song in rec_song_list:
-                    if song in ans['songs']:
-                        found_cnt += 1
-
-                found_percent = 0
-                if len(visited_result) != 0:
-                    found_percent = found_cnt / len(visited_result)
-
-                accurate_percent_list.append(found_percent)
-                return rec_song_list
-            song = song_pair[0]
-            if (song not in my_songs) and (song not in rec_song_list):
-                rec_song_list.append(song)
-
-        for i in range(len(sorted_list)):
-            cur_playlist = song_sets[sorted_list[i][1]]
-            for song in cur_playlist:
-                if len(rec_song_list) == 100:
+                if ans is not None:
                     visited_percent = len(visited_result) / len(ans['songs'])
                     visited_percent_list.append(visited_percent)
 
@@ -135,6 +114,29 @@ class GenreMostPopular:
                         found_percent = found_cnt / len(visited_result)
 
                     accurate_percent_list.append(found_percent)
+                return rec_song_list
+            song = song_pair[0]
+            if (song not in my_songs) and (song not in rec_song_list):
+                rec_song_list.append(song)
+
+        for i in range(len(sorted_list)):
+            cur_playlist = song_sets[sorted_list[i][1]]
+            for song in cur_playlist:
+                if len(rec_song_list) == 100:
+                    if ans is not None:
+                        visited_percent = len(visited_result) / len(ans['songs'])
+                        visited_percent_list.append(visited_percent)
+
+                        found_cnt = 0
+                        for song in rec_song_list:
+                            if song in ans['songs']:
+                                found_cnt += 1
+
+                        found_percent = 0
+                        if len(visited_result) != 0:
+                            found_percent = found_cnt / len(visited_result)
+
+                        accurate_percent_list.append(found_percent)
                     return rec_song_list
                 if (song not in my_songs) and (song not in rec_song_list):
                     rec_song_list.append(song)
@@ -184,10 +186,11 @@ class GenreMostPopular:
         for q in tqdm(questions):
         # for q in questions:
             cur_ans = None
-            for c_ans in ans:
-                if c_ans['id'] == q['id']:
-                    cur_ans = c_ans
-                    break
+            if ans is not None:
+                for c_ans in ans:
+                    if c_ans['id'] == q['id']:
+                        cur_ans = c_ans
+                        break
 
             my_songs = q['songs']
             my_tags = q['tags']
@@ -255,6 +258,7 @@ class GenreMostPopular:
 
             if len(rec_song_list) != 100:
                 print(f'song sz : {len(rec_song_list)}')
+
             if len(rec_tag_list) != 10:
                 print(f'tag sz : {len(rec_tag_list)}')
 
@@ -264,31 +268,31 @@ class GenreMostPopular:
                 "tags": rec_tag_list
             })
         return_dict[p_idx] = answers
+        if ans is not None:
+            avg_visited_percent_list = 0.0
+            avg_accurate_percent_list = 0.0
+            sum_percent = 0.0
+            sum_accurate_percent = 0.0
+            actual_cnt = 0
+            for idx, per in enumerate(visited_percent_list):
+                sum_percent += per
+                if (per != 0) or (per != 0.0):
+                    actual_cnt += 1
+                    sum_accurate_percent += accurate_percent_list[idx]
 
-        avg_visited_percent_list = 0.0
-        avg_accurate_percent_list = 0.0
-        sum_percent = 0.0
-        sum_accurate_percent = 0.0
-        actual_cnt = 0
-        for idx, per in enumerate(visited_percent_list):
-            sum_percent += per
-            if (per != 0) or (per != 0.0):
-                actual_cnt += 1
-                sum_accurate_percent += accurate_percent_list[idx]
+            avg_visited_percent_list = sum_percent / len(visited_percent_list)
+            if actual_cnt != 0:
+                avg_accurate_percent_list = sum_accurate_percent/actual_cnt
 
-        avg_visited_percent_list = sum_percent / len(visited_percent_list)
-        if actual_cnt != 0:
-            avg_accurate_percent_list = sum_accurate_percent/actual_cnt
+            print(f'avg visited song percent : {avg_visited_percent_list}')
+            print(f'avg found song in visited songs percent : {avg_accurate_percent_list}')
 
-        print(f'avg visited song percent : {avg_visited_percent_list}')
-        print(f'avg found song in visited songs percent : {avg_accurate_percent_list}')
+            from matplotlib import pyplot as plt
 
-        from matplotlib import pyplot as plt
-
-        plt.hist(visited_percent_list, alpha=0.5, bins=20, label='visited_percent')
-        plt.hist(accurate_percent_list, alpha=0.5, bins=20, label='accurate_percent')
-        plt.legend(loc='upper right')
-        plt.show()
+            plt.hist(visited_percent_list, alpha=0.5, bins=20, label='visited_percent')
+            plt.hist(accurate_percent_list, alpha=0.5, bins=20, label='accurate_percent')
+            plt.legend(loc='upper right')
+            plt.show()
 
         return answers
 
