@@ -1,3 +1,5 @@
+import math
+import random
 from tqdm import tqdm
 from lib.graph import CachedGraph
 from lib.graph import AlbumNode
@@ -18,6 +20,7 @@ from ..utils import ScoreMap
 
 
 DEBUG = False
+# DEBUG = True
 
 
 class GraphSpread(BaseModel):
@@ -25,6 +28,7 @@ class GraphSpread(BaseModel):
         self._graph = cached_graph
         self._max_songs = max_songs
         self._max_tags = max_tags
+        self._rand = None
 
     def predict(self, question):
         question_id = question['id']
@@ -33,6 +37,8 @@ class GraphSpread(BaseModel):
         title = question['plylst_title']
         # like_count = question['like_cnt']
         update_date = question['updt_date']
+
+        self._rand = random.Random(0)
 
         predicted_songs, predicted_tags = self._predict_songs_and_tags(
             songs=songs,
@@ -67,21 +73,29 @@ class GraphSpread(BaseModel):
         weights = weights.increase(tag_nodes, 1, True)
         weights = weights.increase(word_nodes, 1, True)
 
-        for _i in range(8):
-            if DEBUG:
-                print('=== current weights ===')
-                print_weights(weights)
-                print()
+        for depth in range(8):
+            # if DEBUG:
+            #     print(f'=== current weights ({len(weights)}) ===')
+            #     print_weights(weights)
+            #     print()
 
             weights = _move_once_weight(weights, relation_weights)
 
             if DEBUG:
-                print('=== moved weights ===')
+                print(f'=== moved weights ({len(weights)}) ===')
                 print_weights(weights)
                 print()
 
+            if DEBUG:
+                print(f'=== moved weights histogram ({len(weights)}) ===')
+                import matplotlib.pyplot as plt
+                print_answer_counts(weights)
+                plt.hist(weights.values())
+                plt.show()
+
             scores.add(weights, True)
-            weights = ScoreMap(int, dict(weights.top(20)))
+            weights = _prune_weights(weights, depth, self._rand)
+            # weights = ScoreMap(int, dict(weights.top(20)))
 
         song_scores = scores.filter(lambda k, v: k.node_class == SongNode)
         song_scores = _filter_by_issue_date(song_scores, update_date)
@@ -103,6 +117,48 @@ def _move_once_weight(weights, relation_weight):
                 next_weights[next_node] += weight * w
 
     return next_weights
+
+
+def _prune_weights(weights, depth, rand):
+    n = _find_ratio_index(weights, 0.65)
+    if depth % 2 == 0:
+        n = 20 + 20 * (depth // 2)
+    else:
+        n = min(max(n, 3), 25)
+    next_weights = ScoreMap(int, dict(weights.top(n)))
+    return next_weights
+
+
+def _prune_weights_randomly(weights, depth, rand):
+    next_weights = ScoreMap(int)
+    if len(weights) <= 0:
+        return next_weights
+    log_weights = weights.map(lambda k, v: math.log2(v + 4) - math.log2(4))
+    max_w = max(log_weights.values())
+    for node, weight in log_weights.items():
+        probability = (weight / max_w) * (1 / (depth + 1))
+        if rand.random() <= probability:
+            next_weights[node] = weight
+    next_weights = ScoreMap(int, dict(next_weights.top(20 * ((depth + 1) ** 2))))
+    return next_weights
+
+
+def _find_ratio_index(weights, r):
+    n = len(weights)
+    if n == 0:
+        return 0
+    max_v = max(weights.values())
+    min_v = min(weights.values())
+    if max_v == min_v:
+        return n
+    i = 0
+    for k, v in dict(weights.top()).items():
+        pos_ratio = ((max_v - v) / (max_v - min_v))
+        if pos_ratio > r:
+            return i
+        i += 1
+
+    return n
 
 
 def _get_relation_weight():
@@ -143,6 +199,7 @@ def _filter_by_issue_date(song_scores, update_date):
         True
     )
 
+
 def print_weights(weights):
     n = 30
     i = 0
@@ -157,3 +214,44 @@ def print_weights(weights):
             print(f"union: {v}")
         else:
             print(f"{k.node_class.__name__}({k.id}): {v}")
+
+
+def print_answer_counts(weights):
+    answer = {'tags': ['피아노', '뉴에이지', '재즈'], 'id': 20353, 'plylst_title': '따뜻한 봄날의 달달한 피아노 뮤직', 'songs': [238465, 129962, 18663, 409769, 184162, 138251, 573337, 288942, 434503, 175027, 1238, 670743, 279741, 87876, 86289], 'like_cnt': 10, 'updt_date': '2016-05-24 10:10:32.000'}
+    # answer = {'tags': ['락발라드', '기분전환', 'Soft_Rock', '락음악', '감성락'], 'id': 89500, 'plylst_title': '몽롱한 감성락! 시끄러운 락이 아닌, 락 발라드! 명곡이 쏟아진다!!', 'songs': [135215, 40820, 112069, 320698, 101972, 69080, 43428, 600975, 427580, 19127, 448887, 260302, 567437, 618720, 705979, 634998, 312626, 78050, 32120, 227312, 230610, 543292], 'like_cnt': 15, 'updt_date': '2020-03-30 18:39:14.000'}
+
+    n_total = len(weights)
+    n_songs = 0
+    n_tags = 0
+    n_answer_songs = 0
+    n_answer_tags = 0
+    max_v = max(weights.values())
+    min_v = min(weights.values())
+    i = 0
+    for k, v in dict(weights.top()).items():
+        if k.node_class is SongNode:
+            n_songs += 1
+            if k.id in answer['songs']:
+                n_answer_songs += 1
+
+                top_percents = (i / n_total) * 100
+                pos_percents = ((max_v - v) / (max_v - min_v)) * 100
+                print(f"{k.node_class.__name__}({k.id}): {v} ({i}, 상위 {top_percents:.3f}%, 위치 {pos_percents:.3f}% )")
+        elif k.node_class is TagNode:
+            n_tags += 1
+            if k.id in answer['tags']:
+                n_answer_tags += 1
+
+                top_percents = (i / n_total) * 100
+                pos_percents = ((max_v - v) / (max_v - min_v)) * 100
+                print(f"{k.node_class.__name__}({k.id}): {v} ({i}, 상위 {top_percents:.3f}%, 위치 {pos_percents:.3f}% )")
+        i += 1
+
+    answer_songs_ratio = (n_answer_songs / n_songs) * 100 if n_songs > 0 else 0
+    answer_tags_ratio = (n_answer_tags / n_tags) * 100 if n_tags > 0 else 0
+
+    print(f"max: {max(weights.values())}")
+    print(f"min: {min(weights.values())}")
+    print(f"total: {n_total}")
+    print(f"songs: {n_answer_songs} ({answer_songs_ratio}%)")
+    print(f"tags: {n_answer_tags} ({answer_tags_ratio}%)")
