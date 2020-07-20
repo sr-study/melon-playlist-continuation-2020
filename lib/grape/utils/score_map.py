@@ -35,6 +35,9 @@ class ScoreMap(collections.defaultdict):
     def filter(self, func):
         return ScoreMap(self.default_factory, {k: v for k, v in self.items() if func(k, v)})
 
+    def map(self, func):
+        return ScoreMap(self.default_factory, {k: func(k, v) for k, v in self.items()})
+
     def top(self, n=None):
         sorted_list = sorted(self.items(), key=lambda t: t[1], reverse=True)
         if n is None:
