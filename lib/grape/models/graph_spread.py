@@ -1,3 +1,4 @@
+import copy
 import math
 import random
 from tqdm import tqdm
@@ -29,6 +30,36 @@ class GraphSpread(BaseModel):
         self._max_tags = max_tags
         self._rand = None
 
+    # def predict(self, question):
+    #     question_id = question['id']
+    #     songs = question['songs']
+    #     tags = question['tags']
+    #     title = question['plylst_title']
+    #     # like_count = question['like_cnt']
+    #     update_date = question['updt_date']
+
+    #     self._rand = random.Random(0)
+
+    #     predicted_songs, predicted_tags = self._predict_songs_and_tags(
+    #         songs=songs,
+    #         tags=tags,
+    #         title=title,
+    #         update_date=update_date,
+    #     )
+
+    #     filtered_songs = remove_seen(
+    #         predicted_songs[:self._max_songs + len(songs)],
+    #         songs)[:self._max_songs]
+    #     filtered_tags = remove_seen(
+    #         predicted_tags[:self._max_tags + len(tags)],
+    #         tags)[:self._max_tags]
+
+    #     return {
+    #         'id': question_id,
+    #         'songs': filtered_songs,
+    #         'tags': filtered_tags,
+    #     }
+
     def predict(self, question):
         question_id = question['id']
         songs = question['songs']
@@ -37,26 +68,44 @@ class GraphSpread(BaseModel):
         # like_count = question['like_cnt']
         update_date = question['updt_date']
 
+        songs = copy.deepcopy(songs)
+        tags = copy.deepcopy(tags)
         self._rand = random.Random(0)
 
-        predicted_songs, predicted_tags = self._predict_songs_and_tags(
-            songs=songs,
-            tags=tags,
-            title=title,
-            update_date=update_date,
-        )
+        answer_songs = []
+        answer_tags = []
+        for n_try in range(20):
+            predicted_songs, predicted_tags = self._predict_songs_and_tags(
+                songs=songs,
+                tags=tags,
+                title=title,
+                update_date=update_date,
+            )
 
-        filtered_songs = remove_seen(
-            predicted_songs[:self._max_songs + len(songs)],
-            songs)[:self._max_songs]
-        filtered_tags = remove_seen(
-            predicted_tags[:self._max_tags + len(tags)],
-            tags)[:self._max_tags]
+            filtered_songs = remove_seen(
+                predicted_songs[:self._max_songs + len(songs)],
+                songs)[:self._max_songs]
+            filtered_tags = remove_seen(
+                predicted_tags[:self._max_tags + len(tags)],
+                tags)[:self._max_tags]
+
+            filtered_songs = filtered_songs[:100]
+            filtered_tags = filtered_tags[:10]
+            answer_songs += filtered_songs
+            answer_tags += filtered_tags
+            songs += filtered_songs
+            tags += filtered_tags
+
+            print(len(answer_songs), len(answer_tags))
+            if len(filtered_songs) == 0 and len(filtered_tags) == 0:
+                break
+            if len(answer_songs) >= 100 and len(answer_tags) >= 10:
+                break
 
         return {
             'id': question_id,
-            'songs': filtered_songs,
-            'tags': filtered_tags,
+            'songs': answer_songs,
+            'tags': answer_tags,
         }
 
     def _predict_songs_and_tags(self, songs, tags, title, update_date):
@@ -72,34 +121,33 @@ class GraphSpread(BaseModel):
         weights = weights.increase(tag_nodes, 1, True)
         weights = weights.increase(word_nodes, 1, True)
 
-        for depth in range(8):
+        for depth in range(4):
             # if DEBUG:
             #     print(f'=== current weights ({len(weights)}) ===')
             #     print_weights(weights)
             #     print()
 
             weights = _move_once_weight(weights, relation_weights)
-            if len(weights) <= 0:
-                break
-            weight_max = max(weights.values())
-            weights2 = weights.map(lambda k, v: (v / weight_max) * (1 / ((depth + 1) ** 2)))
+            # if len(weights) <= 0:
+            #     break
+            # weight_max = max(weights.values())
+            # weights2 = weights.map(lambda k, v: (v / weight_max) * (1 / ((depth + 1) * 4)))
 
             if DEBUG:
-                print(f'=== moved weights ({len(weights2)}) ===')
-                print_weights(weights2)
+                print(f'=== moved weights ({len(weights)}) ===')
+                print_weights(weights)
                 print()
 
             if DEBUG:
-                print(f'=== moved weights histogram ({len(weights2)}) ===')
+                print(f'=== moved weights histogram ({len(weights)}) ===')
                 import matplotlib.pyplot as plt
-                print_answer_counts(weights2)
-                plt.hist(weights2.values())
+                print_answer_counts(weights)
+                plt.hist(weights.values())
                 plt.show()
 
-            scores.add(weights2, True)
-            weights = _prune_weights(weights, depth, self._rand)
-            print(depth, len(weights))
-            # weights = ScoreMap(int, dict(weights.top(20)))
+            scores.add(weights, True)
+            # weights = _prune_weights(weights, depth, self._rand)
+            weights = ScoreMap(int, dict(weights.top(20)))
 
         song_scores = scores.filter(lambda k, v: k.node_class == SongNode)
         song_scores = _filter_by_issue_date(song_scores, update_date)
