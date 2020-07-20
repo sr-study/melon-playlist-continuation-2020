@@ -109,7 +109,9 @@ def _get_relation_weight():
     c = 0.01
     return {
         AlbumNode.Relation.SONG: c * 1,
+        AlbumNode.Relation.WORD: c * 0,
         ArtistNode.Relation.SONG: c * 1,
+        ArtistNode.Relation.WORD: c * 0,
         GenreNode.Relation.SONG: c * 1,
         PlaylistNode.Relation.SONG: c * 1,
         PlaylistNode.Relation.TAG: c * 2.5,
@@ -121,6 +123,8 @@ def _get_relation_weight():
         SongNode.Relation.PLAYLIST: c * 0.75,
         TagNode.Relation.PLAYLIST: c * 1,
         TagNode.Relation.WORD: c * 1,
+        WordNode.Relation.ALBUM: c * 0,
+        WordNode.Relation.ARTIST: c * 0,
         WordNode.Relation.PLAYLIST: c * 1,
         WordNode.Relation.TAG: c * 0.1,
         (SongNode.Relation.ARTIST, SongNode.Relation.GENRE): c * 0,

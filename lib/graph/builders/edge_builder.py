@@ -39,7 +39,7 @@ class EdgeBuilder:
             song_node = nodes.get(SongNode, song['id'])
 
             artists = zip(song['artist_id_basket'], song['artist_name_basket'])
-            for artist_id, _artist_name in artists:
+            for artist_id, artist_name in artists:
                 artist_node = nodes.get(ArtistNode, artist_id)
                 edges.add(Edge(
                     src=song_node,
@@ -52,6 +52,19 @@ class EdgeBuilder:
                     relation=ArtistNode.Relation.SONG,
                 ))
 
+                for word in get_words(artist_name):
+                    word_node = nodes.get(WordNode, word)
+                    edges.add(Edge(
+                        src=artist_node,
+                        dst=word_node,
+                        relation=ArtistNode.Relation.WORD,
+                    ))
+                    edges.add(Edge(
+                        src=word_node,
+                        dst=artist_node,
+                        relation=WordNode.Relation.ARTIST,
+                    ))
+
             album_node = nodes.get(AlbumNode, song['album_id'])
             edges.add(Edge(
                 src=song_node,
@@ -63,6 +76,20 @@ class EdgeBuilder:
                 dst=song_node,
                 relation=AlbumNode.Relation.SONG,
             ))
+
+            if song['album_name'] is not None:
+                for word in get_words(song['album_name']):
+                    word_node = nodes.get(WordNode, word)
+                    edges.add(Edge(
+                        src=album_node,
+                        dst=word_node,
+                        relation=AlbumNode.Relation.WORD,
+                    ))
+                    edges.add(Edge(
+                        src=word_node,
+                        dst=album_node,
+                        relation=WordNode.Relation.ALBUM,
+                    ))
 
             for genre_id in song['song_gn_gnr_basket']:
                 genre_node = nodes.get(GenreNode, genre_id)

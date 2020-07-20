@@ -42,10 +42,25 @@ class NodeBuilder:
                     name=artist_name,
                 ))
 
+                for word in get_words(artist_name):
+                    if not nodes.has(WordNode, word):
+                        nodes.add(WordNode(
+                            id=word,
+                            name=word,
+                        ))
+
             nodes.add(AlbumNode(
                 id=song['album_id'],
                 name=song['album_name'],
             ))
+
+            if song['album_name'] is not None:
+                for word in get_words(song['album_name']):
+                    if not nodes.has(WordNode, word):
+                        nodes.add(WordNode(
+                            id=word,
+                            name=word,
+                        ))
 
             for genre_id in song['song_gn_gnr_basket']:
                 if nodes.has(GenreNode, genre_id):

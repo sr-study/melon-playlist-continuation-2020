@@ -5,6 +5,7 @@ from ..core import Node
 class ArtistNode(Node):
     class Relation(Node.Relation):
         SONG = Node.Relation.auto()
+        WORD = Node.Relation.auto()
 
     __slots__ = ['name']
 
