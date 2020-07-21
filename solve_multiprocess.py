@@ -6,6 +6,7 @@ import multiprocessing
 
 from arena_util import load_json
 from arena_util import write_json
+import pandas as pd
 
 NUM_CORE = 6
 
@@ -41,11 +42,14 @@ class MultiprocessSolver:
         if train_ans_fname != None:
             ans = load_json(train_ans_fname)
 
+        result_df = pd.DataFrame(
+            columns=['id', 'means_music_score', 'mean_tag_score', 'mean_title_score'])
+
         print("Writing answers...")
 
         chunked_train_set = list(self.chunker_list(questions, NUM_CORE))
         print(f'run with {len(chunked_train_set)} multiprocess')
-        from nns_ensemble_with_artist import GenreMostPopular
+        from nns_ensemble_with_artist_dist import GenreMostPopular
         import multiprocessing
         algorithm = GenreMostPopular()
 
@@ -56,7 +60,7 @@ class MultiprocessSolver:
 
         for p_idx, train_chunk in enumerate(chunked_train_set):
             p = multiprocessing.Process(target=algorithm._generate_answers,
-                                        args=(song_meta_json, train_data, train_chunk, ans, p_idx, return_dict))
+                                        args=(song_meta_json, train_data, train_chunk, result_df, ans, p_idx, return_dict))
             jobs.append(p)
             p.start()
             p_idxs.append(p_idx)
