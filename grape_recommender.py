@@ -12,7 +12,7 @@ from utils import validate_answers
 
 
 class GrapeRecommender:
-    def run(self, song_meta_fname, genre_fname, train_fname, question_fname):
+    def run(self, song_meta_fname, genre_fname, train_fname, question_fname, output_fname="./arena_data/results/results.json"):
         print("Loading song meta...")
         song_meta = read_json(song_meta_fname)
 
@@ -38,7 +38,7 @@ class GrapeRecommender:
 
         print("Writing answers...")
         answers = grape.predict_all(questions)
-        write_json(answers, "./arena_data/results/results.json")
+        write_json(answers, output_fname)
         validate_answers(answers, questions)
 
 
