@@ -4,10 +4,12 @@ from ..core import Edge
 from ..nodes import AlbumNode
 from ..nodes import ArtistNode
 from ..nodes import GenreNode
+from ..nodes import MonthNode
 from ..nodes import PlaylistNode
 from ..nodes import SongNode
 from ..nodes import TagNode
 from ..nodes import WordNode
+from ..nodes import YearNode
 from ..utils import get_words
 from .node_manager import NodeManager
 from .edge_manager import EdgeManager
@@ -115,6 +117,34 @@ class EdgeBuilder:
                     src=genre_node,
                     dst=song_node,
                     relation=GenreNode.Relation.SONG,
+                ))
+
+            issue_date = song['issue_date']
+            year = int(issue_date[0:4])
+            month = int(issue_date[4:6])
+            if year > 0:
+                year_node = nodes.get(YearNode, year)
+                edges.add(Edge(
+                    src=song_node,
+                    dst=year_node,
+                    relation=SongNode.Relation.YEAR,
+                ))
+                edges.add(Edge(
+                    src=year_node,
+                    dst=song_node,
+                    relation=YearNode.Relation.SONG,
+                ))
+            if month > 0:
+                month_node = nodes.get(MonthNode, month)
+                edges.add(Edge(
+                    src=song_node,
+                    dst=month_node,
+                    relation=SongNode.Relation.MONTH,
+                ))
+                edges.add(Edge(
+                    src=month_node,
+                    dst=song_node,
+                    relation=MonthNode.Relation.SONG,
                 ))
 
             pbar.update()

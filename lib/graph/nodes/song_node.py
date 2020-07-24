@@ -9,6 +9,8 @@ class SongNode(Node):
         GENRE = Node.Relation.auto()
         DETAILED_GENRE = Node.Relation.auto()
         PLAYLIST = Node.Relation.auto()
+        YEAR = Node.Relation.auto()
+        MONTH = Node.Relation.auto()
 
     __slots__ = ['name', 'issue_date']
 

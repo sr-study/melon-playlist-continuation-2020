@@ -3,10 +3,12 @@ from ..core import Graph
 from ..nodes import AlbumNode
 from ..nodes import ArtistNode
 from ..nodes import GenreNode
+from ..nodes import MonthNode
 from ..nodes import PlaylistNode
 from ..nodes import SongNode
 from ..nodes import TagNode
 from ..nodes import WordNode
+from ..nodes import YearNode
 from ..utils import get_words
 from .node_manager import NodeManager
 
@@ -78,6 +80,18 @@ class NodeBuilder:
                 nodes.add(GenreNode(
                     id=genre_id,
                     name=None,
+                ))
+
+            issue_date = song['issue_date']
+            year = int(issue_date[0:4])
+            month = int(issue_date[4:6])
+            if year > 0 and not nodes.has(YearNode, year):
+                nodes.add(YearNode(
+                    id=year,
+                ))
+            if month > 0 and not nodes.has(MonthNode, month):
+                nodes.add(MonthNode(
+                    id=month,
                 ))
 
             pbar.update()

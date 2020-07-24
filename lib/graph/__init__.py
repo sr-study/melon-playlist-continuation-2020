@@ -9,10 +9,12 @@ from .core import Node
 from .nodes import AlbumNode
 from .nodes import ArtistNode
 from .nodes import GenreNode
+from .nodes import MonthNode
 from .nodes import PlaylistNode
 from .nodes import SongNode
 from .nodes import TagNode
 from .nodes import WordNode
+from .nodes import YearNode
 
 __all__ = [
     'GraphBuilder',
@@ -26,8 +28,10 @@ __all__ = [
     'AlbumNode',
     'ArtistNode',
     'GenreNode',
+    'MonthNode',
     'PlaylistNode',
     'SongNode',
     'TagNode',
     'WordNode',
+    'YearNode',
 ]

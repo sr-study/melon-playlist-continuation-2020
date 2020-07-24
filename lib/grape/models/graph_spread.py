@@ -5,10 +5,12 @@ from lib.graph import CachedGraph
 from lib.graph import AlbumNode
 from lib.graph import ArtistNode
 from lib.graph import GenreNode
+from lib.graph import MonthNode
 from lib.graph import PlaylistNode
 from lib.graph import SongNode
 from lib.graph import TagNode
 from lib.graph import WordNode
+from lib.graph import YearNode
 from lib.graph.utils import get_words
 from .base import BaseModel
 from ..utils import merge_unique_lists
@@ -169,6 +171,7 @@ def _get_relation_weight():
         ArtistNode.Relation.SONG: c * 1,
         ArtistNode.Relation.WORD: c * 0,
         GenreNode.Relation.SONG: c * 1,
+        MonthNode.Relation.SONG: c * 0,
         PlaylistNode.Relation.SONG: c * 1,
         PlaylistNode.Relation.TAG: c * 2.5,
         PlaylistNode.Relation.WORD: c * 2.5,
@@ -177,12 +180,15 @@ def _get_relation_weight():
         SongNode.Relation.DETAILED_GENRE: c * 0,
         SongNode.Relation.GENRE: c * 0,
         SongNode.Relation.PLAYLIST: c * 0.75,
+        SongNode.Relation.MONTH: c * 0,
+        SongNode.Relation.YEAR: c * 0,
         TagNode.Relation.PLAYLIST: c * 1,
         TagNode.Relation.WORD: c * 1,
         WordNode.Relation.ALBUM: c * 0,
         WordNode.Relation.ARTIST: c * 0,
         WordNode.Relation.PLAYLIST: c * 1,
         WordNode.Relation.TAG: c * 0.1,
+        YearNode.Relation.SONG: c * 0,
         (SongNode.Relation.ARTIST, SongNode.Relation.GENRE): c * 0,
         (SongNode.Relation.ARTIST, SongNode.Relation.DETAILED_GENRE): c * 1.5,
         (ArtistNode.Relation.SONG, GenreNode.Relation.SONG): c * 1,
