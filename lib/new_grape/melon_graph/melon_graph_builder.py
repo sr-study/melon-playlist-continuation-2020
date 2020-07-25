@@ -1,3 +1,4 @@
+from tqdm import tqdm
 from .melon_graph import MelonGraph
 from .utils import get_words
 from ..graph import Edge
@@ -6,29 +7,37 @@ from ..graph import Node
 
 
 class MelonGraphBuilder:
-    def build(self, songs, genres, playlists):
-        raw_nodes, raw_edges = self._parse_all(songs, genres, playlists)
-        return self._create_graph(raw_nodes, raw_edges)
+    def build(self, songs, genres, playlists, verbose=True):
+        raw_nodes, raw_edges = self._parse_all(songs, genres, playlists, verbose)
+        return self._create_graph(raw_nodes, raw_edges, verbose)
 
-    def _parse_all(self, songs, genres, playlists):
+    def _parse_all(self, songs, genres, playlists, verbose=True):
+        pbar = None
+        if verbose:
+            total = len(genres) + len(songs) + len(playlists)
+            pbar = tqdm(desc="Parsing data", total=total)
+
         raw_nodes = []
         raw_edges = []
 
-        parsed_raw_nodes, parsed_raw_edges = self._parse_genres(genres)
+        parsed_raw_nodes, parsed_raw_edges = self._parse_genres(genres, pbar)
         raw_nodes += parsed_raw_nodes
         raw_edges += parsed_raw_edges
 
-        parsed_raw_nodes, parsed_raw_edges = self._parse_songs(songs)
+        parsed_raw_nodes, parsed_raw_edges = self._parse_songs(songs, pbar)
         raw_nodes += parsed_raw_nodes
         raw_edges += parsed_raw_edges
 
-        parsed_raw_nodes, parsed_raw_edges = self._parse_playlists(playlists)
+        parsed_raw_nodes, parsed_raw_edges = self._parse_playlists(playlists, pbar)
         raw_nodes += parsed_raw_nodes
         raw_edges += parsed_raw_edges
+
+        if pbar is not None:
+            pbar.close()
 
         return raw_nodes, raw_edges
 
-    def _parse_genres(self, genres):
+    def _parse_genres(self, genres, pbar=None):
         raw_nodes = []
         raw_edges = []
 
@@ -37,9 +46,12 @@ class MelonGraphBuilder:
                 'name': value
             }))
 
+            if pbar is not None:
+                pbar.update()
+
         return raw_nodes, raw_edges
 
-    def _parse_songs(self, songs):
+    def _parse_songs(self, songs, pbar=None):
         raw_nodes = []
         raw_edges = []
 
@@ -197,9 +209,12 @@ class MelonGraphBuilder:
                     MelonGraph.Relation.MONTH_TO_SONG,
                 ))
 
+            if pbar is not None:
+                pbar.update()
+
         return raw_nodes, raw_edges
 
-    def _parse_playlists(self, playlists):
+    def _parse_playlists(self, playlists, pbar=None):
         raw_nodes = []
         raw_edges = []
 
@@ -266,16 +281,27 @@ class MelonGraphBuilder:
                     MelonGraph.Relation.WORD_TO_PLAYLIST,
                 ))
 
+            if pbar is not None:
+                pbar.update()
+
         return raw_nodes, raw_edges
 
-    def _create_graph(self, raw_nodes, raw_edges):
+    def _create_graph(self, raw_nodes, raw_edges, verbose=True):
+        pbar = None
+        if verbose:
+            total = len(raw_nodes) + len(raw_edges)
+            pbar = tqdm(desc="Creating graph", total=total)
+
         graph = Graph()
-        self._add_nodes(graph, raw_nodes)
-        self._add_edges(graph, raw_edges)
+        self._add_nodes(graph, raw_nodes, pbar)
+        self._add_edges(graph, raw_edges, pbar)
+
+        if pbar is not None:
+            pbar.close()
 
         return graph
 
-    def _add_nodes(self, graph, raw_nodes):
+    def _add_nodes(self, graph, raw_nodes, pbar=None):
         node_keys = set()
         for raw_node in raw_nodes:
             node_type, node_id, data = raw_node
@@ -289,7 +315,10 @@ class MelonGraphBuilder:
             node = Node(node_type, node_id, data)
             graph.add_node(node)
 
-    def _add_edges(self, graph, raw_edges):
+            if pbar is not None:
+                pbar.update()
+
+    def _add_edges(self, graph, raw_edges, pbar=None):
         node_key_index = {}
         for index, node in enumerate(graph.nodes):
             node_key = (node.type, node.id)
@@ -332,3 +361,6 @@ class MelonGraphBuilder:
 
             edge = Edge(src_index, dst_index, relation)
             graph.add_edge(edge)
+
+            if pbar is not None:
+                pbar.update()
