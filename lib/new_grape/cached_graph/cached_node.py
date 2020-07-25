@@ -11,8 +11,13 @@ class CachedNode:
         self.index = index
         self.related_nodes = defaultdict(list)
 
+        self.data['indegree'] = 0
+        self.data['outdegree'] = 0
+
     def add_related_node(self, dst, relation):
         self.related_nodes[relation].append(dst)
+        self.data['outdegree'] += 1
+        dst.data['indegree'] += 1
 
     def state(self):
         return [self.type, self.id, self.data]

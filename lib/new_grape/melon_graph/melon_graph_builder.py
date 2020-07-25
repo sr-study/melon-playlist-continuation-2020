@@ -71,7 +71,7 @@ class MelonGraphBuilder:
 
                 for word in get_words(artist_name):
                     word_key = (MelonGraph.NodeType.WORD, word)
-                    raw_nodes.append((MelonGraph.NodeType.WORD, word, None))
+                    raw_nodes.append((MelonGraph.NodeType.WORD, word, {}))
                     raw_edges.append((
                         artist_key,
                         word_key,
@@ -101,7 +101,7 @@ class MelonGraphBuilder:
             if song['album_name'] is not None:
                 for word in get_words(song['album_name']):
                     word_key = (MelonGraph.NodeType.WORD, word)
-                    raw_nodes.append((MelonGraph.NodeType.WORD, word, None))
+                    raw_nodes.append((MelonGraph.NodeType.WORD, word, {}))
                     raw_edges.append((
                         album_key,
                         word_key,
@@ -129,7 +129,7 @@ class MelonGraphBuilder:
                 for artist_key in artist_keys:
                     artist_genre_key = (
                         MelonGraph.NodeType.ARTIST_GENRE, (artist_key[1], genre_key[1]))
-                    raw_nodes.append((artist_genre_key[0], artist_genre_key[1], None))
+                    raw_nodes.append((artist_genre_key[0], artist_genre_key[1], {}))
                     raw_edges.append((
                         song_key,
                         artist_genre_key,
@@ -157,7 +157,7 @@ class MelonGraphBuilder:
                 for artist_key in artist_keys:
                     artist_genre_key = (
                         MelonGraph.NodeType.ARTIST_GENRE, (artist_key[1], genre_key[1]))
-                    raw_nodes.append((artist_genre_key[0], artist_genre_key[1], None))
+                    raw_nodes.append((artist_genre_key[0], artist_genre_key[1], {}))
                     raw_edges.append((
                         song_key,
                         artist_genre_key,
@@ -213,7 +213,7 @@ class MelonGraphBuilder:
 
             for tag in playlist['tags']:
                 tag_key = (MelonGraph.NodeType.TAG, tag)
-                raw_nodes.append((MelonGraph.NodeType.TAG, tag, None))
+                raw_nodes.append((MelonGraph.NodeType.TAG, tag, {}))
                 raw_edges.append((
                     playlist_key,
                     tag_key,
@@ -227,7 +227,7 @@ class MelonGraphBuilder:
 
                 for word in get_words(tag):
                     word_key = (MelonGraph.NodeType.WORD, word)
-                    raw_nodes.append((MelonGraph.NodeType.WORD, word, None))
+                    raw_nodes.append((MelonGraph.NodeType.WORD, word, {}))
                     raw_edges.append((
                         tag_key,
                         word_key,
@@ -254,7 +254,7 @@ class MelonGraphBuilder:
 
             for word in get_words(playlist['plylst_title']):
                 word_key = (MelonGraph.NodeType.WORD, word)
-                raw_nodes.append((MelonGraph.NodeType.WORD, word, None))
+                raw_nodes.append((MelonGraph.NodeType.WORD, word, {}))
                 raw_edges.append((
                     playlist_key,
                     word_key,
@@ -323,12 +323,12 @@ class MelonGraphBuilder:
             if __has_node_index(src[0], src[1]):
                 src_index = __get_node_index(src[0], src[1])
             else:
-                src_index = __add_node(Node(src[0], src[1], None))
+                src_index = __add_node(Node(src[0], src[1], {}))
 
             if __has_node_index(dst[0], dst[1]):
                 dst_index = __get_node_index(dst[0], dst[1])
             else:
-                dst_index = __add_node(Node(dst[0], dst[1], None))
+                dst_index = __add_node(Node(dst[0], dst[1], {}))
 
             edge = Edge(src_index, dst_index, relation)
             graph.add_edge(edge)
