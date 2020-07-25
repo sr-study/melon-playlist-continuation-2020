@@ -1,7 +1,7 @@
 import copy
 import pickle
 
-from .cached_graph import CachedGraph
+from ..cached_graph import CachedGraph
 from ..melon_graph import MelonGraphBuilder
 from ..graph import Graph
 
@@ -17,7 +17,7 @@ class Grape:
     def fit(self, songs, genres, playlists):
         graph_builder = MelonGraphBuilder()
         graph = graph_builder.build(songs, genres, playlists)
-        self._initialize(graph)
+        self._graph = CachedGraph(graph)
 
     def set_params(self, **params):
         self._params.update(params)
@@ -26,8 +26,6 @@ class Grape:
         return copy.deepcopy(self._params)
 
     def save(self, path):
-        print(len(self._graph.nodes))
-        print(len(self._graph.edges))
         with open(path, 'wb') as f:
             pickle.dump((self._graph.state(), self._params), f)
 
@@ -36,7 +34,7 @@ class Grape:
             graph_state, params = pickle.load(f)
 
         graph = Graph.from_state(graph_state)
-        self._initialize(graph)
+        self._graph = CachedGraph(graph)
         self._params = params
 
     def __call__(self, playlist, params=None):
@@ -47,6 +45,3 @@ class Grape:
             params = self._params
 
         return playlist
-
-    def _initialize(self, graph):
-        self._graph = CachedGraph(graph)
