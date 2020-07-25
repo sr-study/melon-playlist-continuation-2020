@@ -30,7 +30,7 @@ class Grape:
                 MelonGraph.Relation.PLAYLIST_TO_WORD: 0.025,
                 MelonGraph.Relation.SONG_TO_ALBUM: 0.015,
                 MelonGraph.Relation.SONG_TO_ARTIST: 0.015,
-                MelonGraph.Relation.SONG_TO_ARTIST_DETAILED_GENRE: 0.015,
+                MelonGraph.Relation.SONG_TO_ARTIST_DETAILED_GENRE: 0.0005,
                 MelonGraph.Relation.SONG_TO_ARTIST_GENRE: 0,
                 MelonGraph.Relation.SONG_TO_DETAILED_GENRE: 0,
                 MelonGraph.Relation.SONG_TO_GENRE: 0,
