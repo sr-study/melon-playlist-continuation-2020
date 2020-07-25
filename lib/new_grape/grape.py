@@ -68,12 +68,12 @@ class Grape:
         with open(path, 'wb') as f:
             pickle.dump((self._graph.state(), self._params), f)
 
-    def load(self, path):
+    def load(self, path, verbose=True):
         with open(path, 'rb') as f:
             graph_state, params = pickle.load(f)
 
         graph = Graph.from_state(graph_state)
-        self._graph = CachedGraph(graph)
+        self._graph = CachedGraph(graph, verbose)
         self._params = params
         self._predictor.fit(self._graph)
 
