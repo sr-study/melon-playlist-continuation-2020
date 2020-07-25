@@ -1,87 +1,87 @@
-from tqdm import tqdm
-from lib.graph import CachedGraph
-from .models import BaseModel
-from .models import GraphSpread
-from .models import MostPopular
-from .utils import merge_unique_lists
-from .utils import remove_seen
+import copy
+import pickle
+
+from .cached_graph import CachedGraph
+from .melon_graph import MelonGraph
+from .melon_graph import MelonGraphBuilder
+from .graph import Graph
+from .predictors import EnsemblePredictor
+from .predictors import MostPopularPredictor
+from .predictors import SpreadPredictor
 
 
-class Grape(BaseModel):
-    def __init__(self, graph, max_songs, max_tags):
-        self._initialize(graph, max_songs, max_tags)
-
-    def _initialize(self, graph, max_songs, max_tags):
-        self._graph = CachedGraph(graph)
-        self._max_songs = max_songs
-        self._max_tags = max_tags
-        self._graph_spread = GraphSpread(
-            self._graph,
-            self._max_songs,
-            self._max_tags,
-        )
-        self._most_popular = MostPopular(
-            self._graph,
-            self._max_songs,
-            self._max_tags,
-        )
-
-        _cache_union_nodes(self._graph)
-
-    def fit(self, playlists):
-        self._most_popular.fit(playlists)
-        return self
-
-    def predict(self, question):
-        results = []
-        results.append(self._graph_spread.predict(question))
-        results.append(self._most_popular.predict(question))
-
-        merged_songs = merge_unique_lists(
-            *(result['songs'] for result in results))
-        merged_tags = merge_unique_lists(
-            *(result['tags'] for result in results))
-
-        filtered_songs = remove_seen(merged_songs, question['songs'])
-        filtered_tags = remove_seen(merged_tags, question['tags'])
-
-        answer_songs = filtered_songs[:self._max_songs]
-        answer_tags = filtered_tags[:self._max_tags]
-
-        return {
-            'id': question['id'],
-            'songs': answer_songs,
-            'tags': answer_tags,
+class Grape:
+    def __init__(self):
+        self._graph = None
+        self._params = {
+            'max_songs': 100,
+            'max_tags': 10,
+            'max_depth': 8,
+            'relation_weight': {
+                MelonGraph.Relation.ALBUM_TO_SONG: 0.01,
+                MelonGraph.Relation.ALBUM_TO_WORD: 0,
+                MelonGraph.Relation.ARTIST_TO_SONG: 0.01,
+                MelonGraph.Relation.ARTIST_TO_WORD: 0,
+                MelonGraph.Relation.ARTIST_GENRE_TO_SONG: 0.01,
+                MelonGraph.Relation.GENRE_TO_SONG: 0.01,
+                MelonGraph.Relation.MONTH_TO_SONG: 0,
+                MelonGraph.Relation.PLAYLIST_TO_SONG: 0.01,
+                MelonGraph.Relation.PLAYLIST_TO_TAG: 0.025,
+                MelonGraph.Relation.PLAYLIST_TO_WORD: 0.025,
+                MelonGraph.Relation.SONG_TO_ALBUM: 0.015,
+                MelonGraph.Relation.SONG_TO_ARTIST: 0.015,
+                MelonGraph.Relation.SONG_TO_ARTIST_DETAILED_GENRE: 0.0005,
+                MelonGraph.Relation.SONG_TO_ARTIST_GENRE: 0,
+                MelonGraph.Relation.SONG_TO_DETAILED_GENRE: 0,
+                MelonGraph.Relation.SONG_TO_GENRE: 0,
+                MelonGraph.Relation.SONG_TO_MONTH: 0,
+                MelonGraph.Relation.SONG_TO_PLAYLIST: 0.0075,
+                MelonGraph.Relation.SONG_TO_YEAR: 0,
+                MelonGraph.Relation.TAG_TO_PLAYLIST: 0.01,
+                MelonGraph.Relation.TAG_TO_WORD: 0.01,
+                MelonGraph.Relation.WORD_TO_ALBUM: 0,
+                MelonGraph.Relation.WORD_TO_ARTIST: 0,
+                MelonGraph.Relation.WORD_TO_PLAYLIST: 0.01,
+                MelonGraph.Relation.WORD_TO_TAG: 0.001,
+                MelonGraph.Relation.YEAR_TO_SONG: 0,
+            },
+            'song_relation_weight': None,
+            'tag_relation_weight': None,
         }
+        self._predictor = EnsemblePredictor()
+        self._predictor.register(SpreadPredictor())
+        self._predictor.register(MostPopularPredictor())
 
+    def fit(self, songs, genres, playlists, verbose=True):
+        graph_builder = MelonGraphBuilder()
+        graph = graph_builder.build(songs, genres, playlists, verbose)
+        self._graph = CachedGraph(graph, verbose)
+        self._predictor.fit(self._graph)
 
-def _cache_union_nodes(graph):
-    from lib.graph import ArtistNode
-    from lib.graph import GenreNode
-    from lib.graph import SongNode
-    from lib.graph import UnionNode
-    from lib.graph import CachedEdge
+    def set_params(self, **params):
+        self._params.update(params)
 
-    for node in tqdm(graph.nodes, "Caching union nodes"):
-        if node.node_class == SongNode:
-            artists = node.get_related_nodes(SongNode.Relation.ARTIST)
-            genres = node.get_related_nodes(SongNode.Relation.GENRE)
-            detailed_genres = node.get_related_nodes(SongNode.Relation.DETAILED_GENRE)
-            for artist in artists:
-                for genre in genres:
-                    if graph.has_node((ArtistNode, GenreNode), (artist.id, genre.id)):
-                        union = graph.get_node((ArtistNode, GenreNode), (artist.id, genre.id))
-                    else:
-                        union = UnionNode(len(graph.nodes), [artist, genre])
-                        graph.add_node(union)
-                    graph.add_edge(CachedEdge(node, union, (SongNode.Relation.ARTIST, SongNode.Relation.GENRE)))
-                    graph.add_edge(CachedEdge(union, node, (ArtistNode.Relation.SONG, GenreNode.Relation.SONG)))
-                    
-                for genre in detailed_genres:
-                    if graph.has_node((ArtistNode, GenreNode), (artist.id, genre.id)):
-                        union = graph.get_node((ArtistNode, GenreNode), (artist.id, genre.id))
-                    else:
-                        union = UnionNode(len(graph.nodes), [artist, genre])
-                        graph.add_node(union)
-                    graph.add_edge(CachedEdge(node, union, (SongNode.Relation.ARTIST, SongNode.Relation.DETAILED_GENRE)))
-                    graph.add_edge(CachedEdge(union, node, (ArtistNode.Relation.SONG, GenreNode.Relation.SONG)))
+    def params(self):
+        return copy.deepcopy(self._params)
+
+    def save(self, path):
+        with open(path, 'wb') as f:
+            pickle.dump((self._graph.state(), self._params), f)
+
+    def load(self, path, verbose=True):
+        with open(path, 'rb') as f:
+            graph_state, params = pickle.load(f)
+
+        graph = Graph.from_state(graph_state)
+        self._graph = CachedGraph(graph, verbose)
+        self._params = params
+        self._predictor.fit(self._graph)
+
+    def __call__(self, playlist, params=None):
+        if self._graph is None:
+            raise Exception("Grape model is not initialized")
+
+        if params is None:
+            params = self._params
+
+        return self._predictor.predict(playlist, params)

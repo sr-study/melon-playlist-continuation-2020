@@ -1,0 +1,43 @@
+from ..graph import Graph
+
+
+class MelonGraph:
+    class NodeType:
+        ALBUM = Graph.NodeType.auto()
+        ARTIST = Graph.NodeType.auto()
+        ARTIST_GENRE = Graph.NodeType.auto()
+        GENRE = Graph.NodeType.auto()
+        MONTH = Graph.NodeType.auto()
+        PLAYLIST = Graph.NodeType.auto()
+        SONG = Graph.NodeType.auto()
+        TAG = Graph.NodeType.auto()
+        WORD = Graph.NodeType.auto()
+        YEAR = Graph.NodeType.auto()
+
+    class Relation:
+        ALBUM_TO_SONG = Graph.Relation.auto()
+        ALBUM_TO_WORD = Graph.Relation.auto()
+        ARTIST_TO_SONG = Graph.Relation.auto()
+        ARTIST_TO_WORD = Graph.Relation.auto()
+        ARTIST_GENRE_TO_SONG = Graph.Relation.auto()
+        GENRE_TO_SONG = Graph.Relation.auto()
+        MONTH_TO_SONG = Graph.Relation.auto()
+        PLAYLIST_TO_SONG = Graph.Relation.auto()
+        PLAYLIST_TO_TAG = Graph.Relation.auto()
+        PLAYLIST_TO_WORD = Graph.Relation.auto()
+        SONG_TO_ALBUM = Graph.Relation.auto()
+        SONG_TO_ARTIST = Graph.Relation.auto()
+        SONG_TO_ARTIST_DETAILED_GENRE = Graph.Relation.auto()
+        SONG_TO_ARTIST_GENRE = Graph.Relation.auto()
+        SONG_TO_DETAILED_GENRE = Graph.Relation.auto()
+        SONG_TO_GENRE = Graph.Relation.auto()
+        SONG_TO_MONTH = Graph.Relation.auto()
+        SONG_TO_PLAYLIST = Graph.Relation.auto()
+        SONG_TO_YEAR = Graph.Relation.auto()
+        TAG_TO_PLAYLIST = Graph.Relation.auto()
+        TAG_TO_WORD = Graph.Relation.auto()
+        WORD_TO_ALBUM = Graph.Relation.auto()
+        WORD_TO_ARTIST = Graph.Relation.auto()
+        WORD_TO_PLAYLIST = Graph.Relation.auto()
+        WORD_TO_TAG = Graph.Relation.auto()
+        YEAR_TO_SONG = Graph.Relation.auto()
