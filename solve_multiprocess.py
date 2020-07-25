@@ -33,6 +33,7 @@ class MultiprocessSolver:
 
         print("Loading train file...")
         train_data = load_json(train_fname)
+        print(len(train_data))
 
         print("Loading question file...")
         questions = load_json(question_fname)

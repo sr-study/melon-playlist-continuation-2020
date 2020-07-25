@@ -8,7 +8,40 @@ from arena_util import load_json
 from arena_util import write_json
 from datetime import datetime
 import pandas as pd
+import re
 
+most_popular_words = Counter()
+most_intersect_words = Counter()
+filtered_word = []#'노래', '좋은', '음악', '듣는', '모음', '곡', '플레이리스트']
+# filtered_word = ['노래', '좋은', '음악', '듣는', '모음', '듣기', '노래들', '때', '날', '곡', '플레이리스트', '음악들', '이', '듣고', '있는', '내', 'in', 'vol2', '후에', '좋게'
+#                  '명곡', '한', '내가', '곡들', '듣기좋은', '모음집', '그', '더', '요즘', 'music', '추천',
+#                  '뮤직', '2', '같은', 'best', '리스트', '1', '하는', '수',
+#                  '되는', '좋아하는', 'the', '들어도', '생각나는', '베스트', '듣고싶은', '취향저격', '그리고', '할',
+#                  '싶을', '꼭', '오는', '나만', '노래모음',
+#                  '나를', '최신곡', '명곡들', '오늘', '나의', '속', '만드는', 'top',
+#                  '그냥', 'hot', '없는', '싶을때', '많이', '사운드', '당신을', '함께하는', '잘', '나만의',
+#                  '추천곡', '지금', '나는', '띵곡', '딱', '가득한', '너무', '오늘의',
+#                  '들어요', '들을', '줄', '않은', '주', '다시', '주는', '마음', '시간', '최신', '다', '가수',
+#                  '50', '같이', 'playlist']
+
+
+def get_words(s: str):
+    s = remove_special_chars(s)
+    s = remove_incomplete_chars(s)
+    s = s.lower()
+    return s.split()
+
+
+def remove_special_chars(s: str):
+    pattern = '[^\w\s]'
+    replace = ''
+    return re.sub(pattern=pattern, repl=replace, string=s)
+
+
+def remove_incomplete_chars(s: str):
+    pattern = '[ㄱ-ㅎㅏ-ㅣ]'
+    replace = ''
+    return re.sub(pattern=pattern, repl=replace, string=s)
 
 class GenreMostPopular:
     def _song_mp_per_genre(self, song_meta, global_mp):
@@ -29,10 +62,16 @@ class GenreMostPopular:
         song_lists = []
         title_lists = []
         year_month_lists = []
+        train = sorted(train, key=lambda x: x['id'])
         for t in train:
+            # print(t)
             tag_lists.append(set(t['tags']))
             song_lists.append(set(t['songs']))
-            title_lists.append(t['plylst_title'].split(' '))
+            # title_lists.append(t['plylst_title'].split(' '))
+            words = get_words(t['plylst_title'])
+            title_lists.append(words)
+            for word in words:
+                most_popular_words[word] += 1
             cur_date = datetime.strptime(t['updt_date'][:10], '%Y-%m-%d')
             year_month_score = (cur_date.year * 12) + (cur_date.month - 1)
             year_month_lists.append(year_month_score)
@@ -97,7 +136,8 @@ class GenreMostPopular:
                     if matched_num:
                         song_weights[song] += weight[i] * (matched_num / sum(my_genres_counter.values()))
 
-        song_weights_sorted = song_weights.most_common()
+        # song_weights_sorted = song_weights.most_common()
+        song_weights_sorted = sorted(song_weights.most_common(), key=lambda x: (-x[1], x[0]))
 
         for song_pair in song_weights_sorted:
             if len(rec_song_list) == 100:
@@ -107,7 +147,7 @@ class GenreMostPopular:
                 rec_song_list.append(song)
 
         for i in range(len(sorted_list)):
-            cur_playlist = song_sets[sorted_list[i][1]]
+            cur_playlist = sorted(song_sets[sorted_list[i][1]])
             for song in cur_playlist:
                 if len(rec_song_list) == 100:
                     return rec_song_list
@@ -130,7 +170,8 @@ class GenreMostPopular:
                 if tag not in my_tags:
                     tag_weights[tag] += weight[i]
 
-        tag_weights_sorted = tag_weights.most_common()
+        # tag_weights_sorted = tag_weights.most_common()
+        tag_weights_sorted = sorted(tag_weights.most_common(), key=lambda x: (-x[1], x[0]))
 
         for tag_pair in tag_weights_sorted:
             if len(rec_tag_list) == 10:
@@ -140,7 +181,7 @@ class GenreMostPopular:
                 rec_tag_list.append(tag)
 
         for i in range(len(sorted_list)):
-            cur_playlist_tags = tag_sets[sorted_list[i][1]]
+            cur_playlist_tags = sorted(tag_sets[sorted_list[i][1]])
             for tag in cur_playlist_tags:
                 if len(rec_tag_list) == 10:
                     return rec_tag_list
@@ -167,7 +208,9 @@ class GenreMostPopular:
             if len(my_songs) == 0 and len(my_tags) != 0:
                 tag_only = True
 
-            my_title = q['plylst_title'].split(' ')
+            my_title = get_words(q['plylst_title'])
+            for word in my_title:
+                most_popular_words[word] += 1
             my_artists_counter = Counter()
             my_genres_counter = Counter()
             for song in my_songs:
@@ -187,7 +230,7 @@ class GenreMostPopular:
                     if song in song_set:
                         songs_score += 1
 
-                if len(my_songs) != 0:
+                if len(song_set) != 0:
                     songs_score = songs_score / (math.log(len(song_set) + 1))
 
                 play_list_score += 15 * songs_score
@@ -198,16 +241,17 @@ class GenreMostPopular:
                         if tag_t == tag_q:
                             tag_score += 1
 
-                if len(my_tags) != 0:
+                if len(tag_sets[idx]) != 0:
                     tag_score = tag_score / (math.log(len(tag_sets[idx]) + 1))
                 play_list_score += 6 * tag_score
 
                 title_score = 0
                 for word in my_title:
-                    if word in title_lists[idx]:
+                    if (word in title_lists[idx]) and (word not in filtered_word):
+                        most_intersect_words[word] += 1
                         title_score += 1
 
-                if len(my_title) != 0:
+                if len(title_lists[idx]) != 0:
                     title_score = title_score / (math.log(len(title_lists[idx]) + 1))
 
                 play_list_score += 3 * title_score
@@ -220,7 +264,7 @@ class GenreMostPopular:
 
                 sorted_list.append([play_list_score, idx, songs_score, tag_score, title_score])
 
-            sorted_list.sort(key=lambda x: x[0], reverse=True)
+            sorted_list.sort(key=lambda x: (x[0], x[1]), reverse=True)
 
             mean_tag = 0
             mean_music = 0
@@ -251,7 +295,9 @@ class GenreMostPopular:
                 "tags": rec_tag_list
             })
         return_dict[p_idx] = answers
-
+        # print([pair[0] for pair in most_popular_words.most_common()[:200]])
+        # print(most_popular_words.most_common()[:200])
+        # print(most_intersect_words.most_common()[:200])
         return answers
 
     def run(self, song_meta_fname, train_fname, question_fname):
