@@ -21,3 +21,6 @@ class CachedNode:
 
     def state(self):
         return [self.type, self.id, self.data]
+
+    def __repr__(self):
+        return f"<{self.type}, {self.id}>"
