@@ -1,9 +1,10 @@
 from tqdm import tqdm
 from .melon_graph import MelonGraph
-from .utils import get_words
 from ..graph import Edge
 from ..graph import Graph
 from ..graph import Node
+from ..utils import get_words
+from ..utils import TqdmDummy
 
 
 class MelonGraphBuilder:
@@ -12,32 +13,31 @@ class MelonGraphBuilder:
         return self._create_graph(raw_nodes, raw_edges, verbose)
 
     def _parse_all(self, songs, genres, playlists, verbose=True):
-        pbar = None
         if verbose:
             total = len(genres) + len(songs) + len(playlists)
             pbar = tqdm(desc="Parsing data", total=total)
+        else:
+            pbar = TqdmDummy()
 
-        raw_nodes = []
-        raw_edges = []
+        with pbar:
+            raw_nodes = []
+            raw_edges = []
 
-        parsed_raw_nodes, parsed_raw_edges = self._parse_genres(genres, pbar)
-        raw_nodes += parsed_raw_nodes
-        raw_edges += parsed_raw_edges
+            parsed_raw_nodes, parsed_raw_edges = self._parse_genres(genres, pbar)
+            raw_nodes += parsed_raw_nodes
+            raw_edges += parsed_raw_edges
 
-        parsed_raw_nodes, parsed_raw_edges = self._parse_songs(songs, pbar)
-        raw_nodes += parsed_raw_nodes
-        raw_edges += parsed_raw_edges
+            parsed_raw_nodes, parsed_raw_edges = self._parse_songs(songs, pbar)
+            raw_nodes += parsed_raw_nodes
+            raw_edges += parsed_raw_edges
 
-        parsed_raw_nodes, parsed_raw_edges = self._parse_playlists(playlists, pbar)
-        raw_nodes += parsed_raw_nodes
-        raw_edges += parsed_raw_edges
-
-        if pbar is not None:
-            pbar.close()
+            parsed_raw_nodes, parsed_raw_edges = self._parse_playlists(playlists, pbar)
+            raw_nodes += parsed_raw_nodes
+            raw_edges += parsed_raw_edges
 
         return raw_nodes, raw_edges
 
-    def _parse_genres(self, genres, pbar=None):
+    def _parse_genres(self, genres, pbar):
         raw_nodes = []
         raw_edges = []
 
@@ -46,12 +46,11 @@ class MelonGraphBuilder:
                 'name': value
             }))
 
-            if pbar is not None:
-                pbar.update()
+            pbar.update()
 
         return raw_nodes, raw_edges
 
-    def _parse_songs(self, songs, pbar=None):
+    def _parse_songs(self, songs, pbar):
         raw_nodes = []
         raw_edges = []
 
@@ -209,12 +208,11 @@ class MelonGraphBuilder:
                     MelonGraph.Relation.MONTH_TO_SONG,
                 ))
 
-            if pbar is not None:
-                pbar.update()
+            pbar.update()
 
         return raw_nodes, raw_edges
 
-    def _parse_playlists(self, playlists, pbar=None):
+    def _parse_playlists(self, playlists, pbar):
         raw_nodes = []
         raw_edges = []
 
@@ -281,35 +279,32 @@ class MelonGraphBuilder:
                     MelonGraph.Relation.WORD_TO_PLAYLIST,
                 ))
 
-            if pbar is not None:
-                pbar.update()
+            pbar.update()
 
         return raw_nodes, raw_edges
 
     def _create_graph(self, raw_nodes, raw_edges, verbose=True):
-        pbar = None
         if verbose:
             total = len(raw_nodes) + len(raw_edges)
             pbar = tqdm(desc="Creating graph", total=total)
+        else:
+            pbar = TqdmDummy()
 
-        graph = Graph()
-        self._add_nodes(graph, raw_nodes, pbar)
-        self._add_edges(graph, raw_edges, pbar)
-
-        if pbar is not None:
-            pbar.close()
+        with pbar:
+            graph = Graph()
+            self._add_nodes(graph, raw_nodes, pbar)
+            self._add_edges(graph, raw_edges, pbar)
 
         return graph
 
-    def _add_nodes(self, graph, raw_nodes, pbar=None):
+    def _add_nodes(self, graph, raw_nodes, pbar):
         node_keys = set()
         for raw_node in raw_nodes:
             node_type, node_id, data = raw_node
 
             node_key = (node_type, node_id)
             if node_key in node_keys:
-                if pbar is not None:
-                    pbar.update()
+                pbar.update()
                 continue
 
             node_keys.add(node_key)
@@ -317,10 +312,9 @@ class MelonGraphBuilder:
             node = Node(node_type, node_id, data)
             graph.add_node(node)
 
-            if pbar is not None:
-                pbar.update()
+            pbar.update()
 
-    def _add_edges(self, graph, raw_edges, pbar=None):
+    def _add_edges(self, graph, raw_edges, pbar):
         node_key_index = {}
         for index, node in enumerate(graph.nodes):
             node_key = (node.type, node.id)
@@ -347,8 +341,7 @@ class MelonGraphBuilder:
 
             edge_key = raw_edge
             if edge_key in edge_keys:
-                if pbar is not None:
-                    pbar.update()
+                pbar.update()
                 continue
 
             edge_keys.add(edge_key)
@@ -366,5 +359,4 @@ class MelonGraphBuilder:
             edge = Edge(src_index, dst_index, relation)
             graph.add_edge(edge)
 
-            if pbar is not None:
-                pbar.update()
+            pbar.update()

@@ -16,8 +16,8 @@ class Grape:
         self._params = {
             'max_songs': 100,
             'max_tags': 10,
-            'max_depth': 2,
-            'relation_scale': {
+            'max_depth': 8,
+            'relation_weight': {
                 MelonGraph.Relation.ALBUM_TO_SONG: 0.01,
                 MelonGraph.Relation.ALBUM_TO_WORD: 0,
                 MelonGraph.Relation.ARTIST_TO_SONG: 0.01,
@@ -45,15 +45,17 @@ class Grape:
                 MelonGraph.Relation.WORD_TO_TAG: 0.001,
                 MelonGraph.Relation.YEAR_TO_SONG: 0,
             },
+            'song_relation_weight': None,
+            'tag_relation_weight': None,
         }
         self._predictor = EnsemblePredictor()
-        self._predictor.register(MostPopularPredictor())
         self._predictor.register(SpreadPredictor())
+        self._predictor.register(MostPopularPredictor())
 
-    def fit(self, songs, genres, playlists):
+    def fit(self, songs, genres, playlists, verbose=True):
         graph_builder = MelonGraphBuilder()
-        graph = graph_builder.build(songs, genres, playlists)
-        self._graph = CachedGraph(graph)
+        graph = graph_builder.build(songs, genres, playlists, verbose)
+        self._graph = CachedGraph(graph, verbose)
         self._predictor.fit(self._graph)
 
     def set_params(self, **params):

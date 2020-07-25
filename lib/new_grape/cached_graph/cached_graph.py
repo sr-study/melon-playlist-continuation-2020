@@ -1,13 +1,15 @@
+from tqdm import tqdm
 from collections import defaultdict
 from .cached_node import CachedNode
 from ..graph import Graph
+from ..utils import TqdmDummy
 
 
 class CachedGraph:
-    def __init__(self, graph):
+    def __init__(self, graph, verbose=True):
         self.nodes = []
         self.type_node_dict = defaultdict(dict)
-        self._cache(graph)
+        self._cache(graph, verbose)
 
     def has_node(self, node_type, node_id):
         return node_id in self.type_node_dict[node_type]
@@ -29,13 +31,22 @@ class CachedGraph:
             'edges': self._create_edge_states(),
         }
 
-    def _cache(self, graph):
-        self.nodes = self._create_cached_nodes(graph)
+    def _cache(self, graph, verbose=True):
+        if verbose:
+            total = len(graph.nodes) + len(graph.edges) + len(graph.nodes)
+            pbar = tqdm(desc="Caching graph", total=total)
+        else:
+            pbar = TqdmDummy()
 
-        for node in self.nodes:
-            self.type_node_dict[node.type][node.id] = node
+        with pbar:
+            self.nodes = self._create_cached_nodes(graph, pbar)
 
-    def _create_cached_nodes(self, graph):
+            for node in self.nodes:
+                self.type_node_dict[node.type][node.id] = node
+
+                pbar.update()
+
+    def _create_cached_nodes(self, graph, pbar):
         cached_nodes = []
 
         for node in graph.nodes:
@@ -43,11 +54,15 @@ class CachedGraph:
             cached_node = CachedNode(node.type, node.id, node.data, index)
             cached_nodes.append(cached_node)
 
+            pbar.update()
+
         for edge in graph.edges:
             src = cached_nodes[edge.src]
             dst = cached_nodes[edge.dst]
             relation = edge.relation
             src.add_related_node(dst, relation)
+
+            pbar.update()
 
         return cached_nodes
 
