@@ -5,7 +5,7 @@ import fire
 import numpy as np
 from tqdm import tqdm
 
-from lib.new_grape import Grape
+from lib.grape import Grape
 from utils import read_json
 from utils import write_json
 from utils import validate_answers
