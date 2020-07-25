@@ -50,9 +50,11 @@ class MelonGraphBuilder:
                 'issue_date': song['issue_date'],
             }))
 
+            artist_keys = []
             artists = zip(song['artist_id_basket'], song['artist_name_basket'])
             for artist_id, artist_name in artists:
                 artist_key = (MelonGraph.NodeType.ARTIST, artist_id)
+                artist_keys.append(artist_key)
                 raw_nodes.append((MelonGraph.NodeType.ARTIST, artist_id, {
                     'name': artist_name,
                 }))
@@ -124,6 +126,21 @@ class MelonGraphBuilder:
                     MelonGraph.Relation.GENRE_TO_SONG,
                 ))
 
+                for artist_key in artist_keys:
+                    artist_genre_key = (
+                        MelonGraph.NodeType.ARTIST_GENRE, (artist_key[1], genre_key[1]))
+                    raw_nodes.append((artist_genre_key[0], artist_genre_key[1], None))
+                    raw_edges.append((
+                        song_key,
+                        artist_genre_key,
+                        MelonGraph.Relation.ARTIST_GENRE_TO_SONG,
+                    ))
+                    raw_edges.append((
+                        artist_genre_key,
+                        song_key,
+                        MelonGraph.Relation.SONG_TO_ARTIST_GENRE,
+                    ))
+
             for genre_id in song['song_gn_dtl_gnr_basket']:
                 genre_key = (MelonGraph.NodeType.GENRE, genre_id)
                 raw_edges.append((
@@ -136,6 +153,21 @@ class MelonGraphBuilder:
                     song_key,
                     MelonGraph.Relation.GENRE_TO_SONG,
                 ))
+
+                for artist_key in artist_keys:
+                    artist_genre_key = (
+                        MelonGraph.NodeType.ARTIST_GENRE, (artist_key[1], genre_key[1]))
+                    raw_nodes.append((artist_genre_key[0], artist_genre_key[1], None))
+                    raw_edges.append((
+                        song_key,
+                        artist_genre_key,
+                        MelonGraph.Relation.ARTIST_GENRE_TO_SONG,
+                    ))
+                    raw_edges.append((
+                        artist_genre_key,
+                        song_key,
+                        MelonGraph.Relation.SONG_TO_ARTIST_DETAILED_GENRE,
+                    ))
 
             issue_date = song['issue_date']
             year = int(issue_date[0:4])
@@ -263,8 +295,12 @@ class MelonGraphBuilder:
             node_key = (node.type, node.id)
             node_key_index[node_key] = index
 
+        def __has_node_index(node_type, node_id):
+            node_key = (node_type, node_id)
+            return node_key in node_key_index
+
         def __get_node_index(node_type, node_id):
-            node_key = (node.type, node.id)
+            node_key = (node_type, node_id)
             return node_key_index[node_key]
 
         def __add_node(node):
@@ -284,12 +320,14 @@ class MelonGraphBuilder:
 
             edge_keys.add(edge_key)
 
-            src_index = __get_node_index(src[0], src[1])
-            if src_index is None:
+            if __has_node_index(src[0], src[1]):
+                src_index = __get_node_index(src[0], src[1])
+            else:
                 src_index = __add_node(Node(src[0], src[1], None))
 
-            dst_index = __get_node_index(dst[0], dst[1])
-            if dst_index is None:
+            if __has_node_index(dst[0], dst[1]):
+                dst_index = __get_node_index(dst[0], dst[1])
+            else:
                 dst_index = __add_node(Node(dst[0], dst[1], None))
 
             edge = Edge(src_index, dst_index, relation)
