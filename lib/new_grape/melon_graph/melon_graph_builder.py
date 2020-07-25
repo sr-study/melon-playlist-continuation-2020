@@ -308,6 +308,8 @@ class MelonGraphBuilder:
 
             node_key = (node_type, node_id)
             if node_key in node_keys:
+                if pbar is not None:
+                    pbar.update()
                 continue
 
             node_keys.add(node_key)
@@ -345,6 +347,8 @@ class MelonGraphBuilder:
 
             edge_key = raw_edge
             if edge_key in edge_keys:
+                if pbar is not None:
+                    pbar.update()
                 continue
 
             edge_keys.add(edge_key)
