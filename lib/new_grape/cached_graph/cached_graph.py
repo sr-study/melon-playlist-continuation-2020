@@ -20,6 +20,9 @@ class CachedGraph:
                 for node_id in node_ids
                 if node_id in self.type_node_dict[node_type]]
 
+    def get_all_nodes(self, node_type):
+        return list(self.type_node_dict[node_type].values())
+
     def state(self):
         return {
             'nodes': self._create_node_states(),
@@ -28,6 +31,9 @@ class CachedGraph:
 
     def _cache(self, graph):
         self.nodes = self._create_cached_nodes(graph)
+
+        for node in self.nodes:
+            self.type_node_dict[node.type][node.id] = node
 
     def _create_cached_nodes(self, graph):
         cached_nodes = []
