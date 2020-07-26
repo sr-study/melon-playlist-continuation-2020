@@ -183,7 +183,7 @@ class GenreMostPopular:
         song_weights_sorted = sorted(song_weights.most_common(), key=lambda x: (-x[1], x[0]))
 
         for song_pair in song_weights_sorted:
-            if len(rec_song_list) == 200:
+            if len(rec_song_list) == 100:
                 return rec_song_list
             song = song_pair[0]
             if (song not in my_songs) and (song not in rec_song_list):
@@ -192,7 +192,7 @@ class GenreMostPopular:
         for i in range(len(sorted_list)):
             cur_playlist = sorted(song_sets[sorted_list[i][1]])
             for song in cur_playlist:
-                if len(rec_song_list) == 200:
+                if len(rec_song_list) == 100:
                     return rec_song_list
                 if (song not in my_songs) and (song not in rec_song_list):
                     rec_song_list.append(song)
@@ -217,7 +217,7 @@ class GenreMostPopular:
         tag_weights_sorted = sorted(tag_weights.most_common(), key=lambda x: (-x[1], x[0]))
 
         for tag_pair in tag_weights_sorted:
-            if len(rec_tag_list) == 20:
+            if len(rec_tag_list) == 10:
                 return rec_tag_list
             tag = tag_pair[0]
             if (tag not in my_tags) and (tag not in rec_tag_list):
@@ -226,7 +226,7 @@ class GenreMostPopular:
         for i in range(len(sorted_list)):
             cur_playlist_tags = sorted(tag_sets[sorted_list[i][1]])
             for tag in cur_playlist_tags:
-                if len(rec_tag_list) == 20:
+                if len(rec_tag_list) == 10:
                     return rec_tag_list
                 if (tag not in my_tags) and (tag not in rec_tag_list):
                     rec_tag_list.append(tag)
@@ -301,7 +301,9 @@ class GenreMostPopular:
                             break
                 artist_name_cnt.append(key.lower())
 
-        except_list = ['클래식', '라디', '구름', '노을']
+        except_list = ['클래식', '라디', '구름', '노을','이루','이브','el','자장가','40','동요','다운','지나','one',
+                       '새벽감성','제이','잠들기전','잔잔한 피아노','blue','테이','디바','팀','가인','유희열','오르골'
+                       ,'max','보니','healing','아재','루나','yg','ja']
         # end koo
 
         answers = []
@@ -435,12 +437,12 @@ class GenreMostPopular:
             for s in rec_song_list:
                 if (s not in my_songs) and (s not in real_answer):
                     real_answer.append(s)
-            real_answer = real_answer[:200]
+            real_answer = real_answer[:100]
 
             more_search = 3
-            if len(rec_song_list) != 200:
+            if len(rec_song_list) != 100:
                 print(f'song sz : {len(real_answer)}')
-            if len(rec_tag_list) != 20:
+            if len(rec_tag_list) != 10:
                 print(f'tag sz : {len(rec_tag_list)}')
 
             answers.append({
