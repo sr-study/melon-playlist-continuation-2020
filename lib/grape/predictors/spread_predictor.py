@@ -1,5 +1,6 @@
 import math
 import random
+from .blacklist import blacklist
 from .base_predictor import BasePredictor
 from .utils import remove_seen
 from ..collections import ScoreMap
@@ -88,11 +89,16 @@ class SpreadPredictor(BasePredictor):
     def _move_once_weight(self, weights, relation_weight):
         next_weights = ScoreMap(int)
         for node, weight in weights.items():
+            if (node.type, node.id) in blacklist:
+                continue
+
             for relation, next_nodes in node.related_nodes.items():
                 w = relation_weight[relation]
                 if w == 0:
                     continue
                 for next_node in next_nodes:
+                    if (next_node.type, next_node.id) in blacklist:
+                        continue
                     next_weights[next_node] += weight * w
 
         return next_weights

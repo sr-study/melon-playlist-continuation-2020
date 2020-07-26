@@ -24,3 +24,12 @@ class CachedNode:
 
     def __repr__(self):
         return f"<{self.type}, {self.id}>"
+
+    def __eq__(self, other):
+        return self.index == other.index
+
+    def __ne__(self, other):
+        return self.index != other.index
+
+    def __hash__(self):
+        return self.index

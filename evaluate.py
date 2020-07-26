@@ -158,5 +158,30 @@ def print_scores(
         print_score(case_music_ndcgs[question_type], case_tag_ndcgs[question_type], case_scores[question_type])
 
 
+def get_scores(
+        total_music_ndcgs, total_tag_ndcgs, total_scores,
+        case_music_ndcgs, case_tag_ndcgs, case_scores,
+    ):
+    scores = {}
+
+    scores['total'] = {
+        'music_ndcg': mean(total_music_ndcgs),
+        'tag_ndcg': mean(total_tag_ndcgs),
+        'score': mean(total_scores),
+    }
+
+    for question_type in QuestionType:
+        if question_type not in case_music_ndcgs:
+            continue
+
+        scores[question_type.name] = {
+            'music_ndcg': mean(case_music_ndcgs[question_type]),
+            'tag_ndcg': mean(case_tag_ndcgs[question_type]),
+            'score': mean(case_scores[question_type]),
+        }
+
+    return scores
+
+
 if __name__ == "__main__":
     fire.Fire(ArenaEvaluator)
