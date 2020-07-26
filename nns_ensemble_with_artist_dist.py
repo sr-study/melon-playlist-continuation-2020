@@ -9,6 +9,7 @@ from arena_util import write_json
 from datetime import datetime
 import pandas as pd
 import re
+from enum import Enum, auto
 
 most_popular_words = Counter()
 most_intersect_words = Counter()
@@ -24,6 +25,29 @@ filtered_word = []#'노래', '좋은', '음악', '듣는', '모음', '곡', '플
 #                  '들어요', '들을', '줄', '않은', '주', '다시', '주는', '마음', '시간', '최신', '다', '가수',
 #                  '50', '같이', 'playlist']
 
+
+class ProblemType(Enum):
+    SONG_ONLY = auto()
+    SONG_TAG = auto()
+    TAG_TITLE = auto()
+    TITLE_ONLY = auto()
+    ELSE = auto()
+
+
+def get_problem_type(songs, tags, titles):
+    # song
+    if len(songs) != 0 and len(tags) == 0 and len(titles) == 0:
+        return ProblemType.SONG_ONLY
+    # song tag
+    if len(songs) != 0 and len(tags) != 0 and len(titles) == 0:
+        return ProblemType.SONG_TAG
+    # tag title
+    if len(songs) == 0 and len(tags) != 0 and len(titles) != 0:
+        return ProblemType.TAG_TITLE
+    # title
+    if len(songs) == 0 and len(tags) == 0 and len(titles) != 0:
+        return ProblemType.TITLE_ONLY
+    return ProblemType.ELSE
 
 def get_words(s: str):
     s = remove_special_chars(s)
@@ -335,20 +359,60 @@ class GenreMostPopular:
             sorted_list = []
             play_list_scores = base_playlist_scores.copy()
 
+
+            problem_type = get_problem_type(my_songs, my_tags, my_title)
+
+            song_knn = 10
+            tag_knn = 30
+            song_weight = 15
+            tag_weight = 6
+            title_weight = 3
+
+            if problem_type == ProblemType.SONG_ONLY:
+                song_weight = 12
+                tag_weight = 6
+                title_weight = 3
+                song_knn = 10
+                tag_knn = 30
+            elif problem_type == ProblemType.SONG_TAG:
+                song_weight = 15
+                tag_weight = 6
+                title_weight = 3
+                song_knn = 10
+                tag_knn = 30
+            elif problem_type == ProblemType.TAG_TITLE:
+                song_weight = 15
+                tag_weight = 6
+                title_weight = 3
+                song_knn = 10
+                tag_knn = 30
+            elif problem_type == ProblemType.TITLE_ONLY:
+                song_weight = 15
+                tag_weight = 6
+                title_weight = 3
+                song_knn = 10
+                tag_knn = 30
+            else:
+                song_weight = 15
+                tag_weight = 6
+                title_weight = 3
+                song_knn = 10
+                tag_knn = 30
+
             for song in my_songs:
                 if song in song_to_indexes.keys():
                     for idx in song_to_indexes[song]:
-                        play_list_scores[idx] += (15 / (math.log(len(song_sets[idx]) + 1)))
+                        play_list_scores[idx] += (song_weight / (math.log(len(song_sets[idx]) + 1)))
 
             for tag in my_tags:
                 if tag in tag_to_indexes.keys():
                     for idx in tag_to_indexes[tag]:
-                        play_list_scores[idx] += (6 / (math.log(len(tag_sets[idx]) + 1)))
+                        play_list_scores[idx] += (tag_weight / (math.log(len(tag_sets[idx]) + 1)))
 
             for word in my_title:
                 if word in title_to_indexes.keys():
                     for idx in title_to_indexes[word]:
-                        play_list_scores[idx] += (3 / (math.log(len(title_lists[idx]) + 1)))
+                        play_list_scores[idx] += (title_weight / (math.log(len(title_lists[idx]) + 1)))
 
             for idx, t in enumerate(year_month_lists):
                 trend_penalty = pow(abs(year_month_lists[idx] - year_month_score), 2) * (1e-3)
@@ -360,8 +424,8 @@ class GenreMostPopular:
             sorted_list.sort(key=lambda x: (x[0], x[1]), reverse=True)
 
             rec_song_list = self._get_song_recommends(song_sets, my_songs, sorted_list, my_artists_counter,
-                                                      my_genres_counter, song_meta, cur_date, 10)
-            rec_tag_list = self._get_tag_recommends(tag_sets, my_tags, sorted_list, 30)
+                                                      my_genres_counter, song_meta, cur_date, song_knn)
+            rec_tag_list = self._get_tag_recommends(tag_sets, my_tags, sorted_list, tag_knn)
 
             real_answer = list()
             for s in answer_list:
