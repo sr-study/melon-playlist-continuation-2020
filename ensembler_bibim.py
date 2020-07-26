@@ -32,9 +32,9 @@ class Ensembler():
         for file_path in file_paths:
             self.results.append(read_json(file_path))
         self.q = read_json(question_path)
-        print(type(self.q))
+#         print(type(self.q))
         self.q_dict = {g['id']: {'songs': g['songs'], 'tags': g['tags'], 'title': g['plylst_title']} for g in self.q}
-        print(self.q_dict)
+#         print(self.q_dict)
 
     def get_problem_type(self, id):
         question = self.q_dict[id]
@@ -53,10 +53,13 @@ class Ensembler():
         return ProblemType.ELSE
 
     def score_ensemble_lists(self, lists, rec_sz, name=None):
+        for each_list in lists:
+            if len(each_list) == 0:
+                print('warning')
         score_dict = {}
         def score_function(idx):
             # linear_model
-            return 100 - idx
+            return (100 - idx) ** 13
         for each_list in lists:
             for idx,val in enumerate(each_list):
                 if val in score_dict.keys():
@@ -138,12 +141,15 @@ class Ensembler():
             if problem_type == ProblemType.SONG_ONLY:
                 ensembled_songs = self.score_ensemble_lists(song_lists, 100, 'song')
                 ensembled_tags = tag_lists[1]
+#                 ensembled_tags = self.score_ensemble_lists(tag_lists, 10, 'tag')
             elif problem_type == ProblemType.SONG_TAG:
                 ensembled_songs = self.score_ensemble_lists(song_lists, 100, 'song')
                 ensembled_tags = tag_lists[1]
+#                 ensembled_tags = self.score_ensemble_lists(tag_lists, 10, 'tag')
             elif problem_type == ProblemType.TAG_TITLE:
                 ensembled_songs = self.score_ensemble_lists(song_lists, 100, 'song')
                 ensembled_tags = tag_lists[0]
+#                 ensembled_tags = self.score_ensemble_lists(tag_lists, 10, 'tag')
             elif problem_type == ProblemType.TITLE_ONLY:
                 ensembled_songs = song_lists[1]
                 ensembled_tags = tag_lists[1]
@@ -156,11 +162,14 @@ class Ensembler():
               'songs': ensembled_songs,
               'tags': ensembled_tags,
             }
+            
             validate_answer(cur_res)
+
             res_json.append(cur_res)
         print(f'total intersect songs : {self.tot_intersect_song}')
         print(f'total intersect tags : {self.tot_intersect_tag}')
         return res_json
+
 
 NUM_OF_RECOMMENDED_SONGS = 100
 NUM_OF_RECOMMENDED_TAGS = 10
@@ -182,7 +191,10 @@ def validate_answer(answer):
     return True
 
 
-ensembler = Ensembler(['./grape_semi/results_test.json', './cf_semi/results_test.json'], './res/test.json')
+    
+    
+    
+ensembler = Ensembler(['./grape_semi/results_test.json', './cf_semi/results_test_extend_except.json'], './res/test.json')
 res = ensembler.ensemble()
 # print(res)
 write_json(res, 'results.json')
