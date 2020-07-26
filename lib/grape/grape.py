@@ -20,7 +20,7 @@ class Grape:
             'relation_weight': {
                 MelonGraph.Relation.ALBUM_TO_SONG: 0.01,
                 MelonGraph.Relation.ALBUM_TO_WORD: 0,
-                MelonGraph.Relation.ARTIST_TO_SONG: 0.01,
+                MelonGraph.Relation.ARTIST_TO_SONG: 0.002,
                 MelonGraph.Relation.ARTIST_TO_WORD: 0,
                 MelonGraph.Relation.ARTIST_GENRE_TO_SONG: 0.01,
                 MelonGraph.Relation.GENRE_TO_SONG: 0.01,
@@ -29,7 +29,7 @@ class Grape:
                 MelonGraph.Relation.PLAYLIST_TO_TAG: 0.025,
                 MelonGraph.Relation.PLAYLIST_TO_WORD: 0.025,
                 MelonGraph.Relation.SONG_TO_ALBUM: 0.015,
-                MelonGraph.Relation.SONG_TO_ARTIST: 0.015,
+                MelonGraph.Relation.SONG_TO_ARTIST: 0.02,
                 MelonGraph.Relation.SONG_TO_ARTIST_DETAILED_GENRE: 0.0005,
                 MelonGraph.Relation.SONG_TO_ARTIST_GENRE: 0,
                 MelonGraph.Relation.SONG_TO_DETAILED_GENRE: 0,
