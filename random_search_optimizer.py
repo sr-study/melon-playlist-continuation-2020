@@ -18,9 +18,9 @@ class RandomSearchOptimizer:
         for i in range(n_iters):
             index = len(self._records)
             params = self._next_params()
-            target = self._func(**params)
+            targets = self._func(**params)
             record = {
-                'target': target,
+                'targets': targets,
                 'params': params,
             }
             self._records.append(record)
@@ -28,7 +28,7 @@ class RandomSearchOptimizer:
             self._print_record(index, record)
 
     def get_maximum_params(self):
-        record = max(self._records, key=lambda r: r['target'])
+        record = max(self._records, key=lambda r: r['targets'])
         return copy.deepcopy(record['params'])
 
     def get_params_by_index(self, index):
@@ -65,7 +65,21 @@ class RandomSearchOptimizer:
 
         head = "|"
         head += f"{col_name('index')}|"
-        head += f"{col_name('target')}|"
+        head += f"{col_name('al_songs')}|"
+        head += f"{col_name('al_tags')}|"
+        head += f"{col_name('al_score')}|"
+        head += f"{col_name('st_songs')}|"
+        head += f"{col_name('st_tags')}|"
+        head += f"{col_name('st_score')}|"
+        head += f"{col_name('tt_songs')}|"
+        head += f"{col_name('tt_tags')}|"
+        head += f"{col_name('tt_score')}|"
+        head += f"{col_name('so_songs')}|"
+        head += f"{col_name('so_tags')}|"
+        head += f"{col_name('so_score')}|"
+        head += f"{col_name('to_songs')}|"
+        head += f"{col_name('to_tags')}|"
+        head += f"{col_name('to_score')}|"
         for k in self._params:
             head += f"{col_name(k)}|"
         print(head)
@@ -80,12 +94,26 @@ class RandomSearchOptimizer:
     def _print_record(self, index, record):
         w = self._col_width
 
-        target = record['target']
+        targets = record['targets']
         params = record['params']
 
         body = "|"
         body += f"{index:>{w}}|"
-        body += f"{target:>{w}}|"
+        body += f"{targets['al_songs']:>{w}}|"
+        body += f"{targets['al_tags']:>{w}}|"
+        body += f"{targets['al_score']:>{w}}|"
+        body += f"{targets['st_songs']:>{w}}|"
+        body += f"{targets['st_tags']:>{w}}|"
+        body += f"{targets['st_score']:>{w}}|"
+        body += f"{targets['tt_songs']:>{w}}|"
+        body += f"{targets['tt_tags']:>{w}}|"
+        body += f"{targets['tt_score']:>{w}}|"
+        body += f"{targets['so_songs']:>{w}}|"
+        body += f"{targets['so_tags']:>{w}}|"
+        body += f"{targets['so_score']:>{w}}|"
+        body += f"{targets['to_songs']:>{w}}|"
+        body += f"{targets['to_tags']:>{w}}|"
+        body += f"{targets['to_score']:>{w}}|"
         for k in self._params:
             body += f"{params[k]:>{w}.4f}|"
         print(body, flush=True)
