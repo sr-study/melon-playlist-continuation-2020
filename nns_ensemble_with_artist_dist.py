@@ -183,7 +183,7 @@ class GenreMostPopular:
         song_weights_sorted = sorted(song_weights.most_common(), key=lambda x: (-x[1], x[0]))
 
         for song_pair in song_weights_sorted:
-            if len(rec_song_list) == 100:
+            if len(rec_song_list) == 200:
                 return rec_song_list
             song = song_pair[0]
             if (song not in my_songs) and (song not in rec_song_list):
@@ -192,7 +192,7 @@ class GenreMostPopular:
         for i in range(len(sorted_list)):
             cur_playlist = sorted(song_sets[sorted_list[i][1]])
             for song in cur_playlist:
-                if len(rec_song_list) == 100:
+                if len(rec_song_list) == 200:
                     return rec_song_list
                 if (song not in my_songs) and (song not in rec_song_list):
                     rec_song_list.append(song)
@@ -217,7 +217,7 @@ class GenreMostPopular:
         tag_weights_sorted = sorted(tag_weights.most_common(), key=lambda x: (-x[1], x[0]))
 
         for tag_pair in tag_weights_sorted:
-            if len(rec_tag_list) == 10:
+            if len(rec_tag_list) == 20:
                 return rec_tag_list
             tag = tag_pair[0]
             if (tag not in my_tags) and (tag not in rec_tag_list):
@@ -226,7 +226,7 @@ class GenreMostPopular:
         for i in range(len(sorted_list)):
             cur_playlist_tags = sorted(tag_sets[sorted_list[i][1]])
             for tag in cur_playlist_tags:
-                if len(rec_tag_list) == 10:
+                if len(rec_tag_list) == 20:
                     return rec_tag_list
                 if (tag not in my_tags) and (tag not in rec_tag_list):
                     rec_tag_list.append(tag)
@@ -367,6 +367,7 @@ class GenreMostPopular:
             song_weight = 15
             tag_weight = 6
             title_weight = 3
+            penalty_alpha = 1
 
             if problem_type == ProblemType.SONG_ONLY:
                 song_weight = 12
@@ -389,8 +390,8 @@ class GenreMostPopular:
             elif problem_type == ProblemType.TITLE_ONLY:
                 song_weight = 15
                 tag_weight = 6
-                title_weight = 3
-                song_knn = 10
+                title_weight = 5
+                song_knn = 30
                 tag_knn = 30
             else:
                 song_weight = 15
@@ -416,7 +417,7 @@ class GenreMostPopular:
 
             for idx, t in enumerate(year_month_lists):
                 trend_penalty = pow(abs(year_month_lists[idx] - year_month_score), 2) * (1e-3)
-                play_list_scores[idx] -= trend_penalty
+                play_list_scores[idx] -= (penalty_alpha * trend_penalty)
 
             for k, v in play_list_scores.items():
                 sorted_list.append((v, k))
@@ -434,12 +435,12 @@ class GenreMostPopular:
             for s in rec_song_list:
                 if (s not in my_songs) and (s not in real_answer):
                     real_answer.append(s)
-            real_answer = real_answer[:100]
+            real_answer = real_answer[:200]
 
             more_search = 3
-            if len(rec_song_list) != 100:
+            if len(rec_song_list) != 200:
                 print(f'song sz : {len(real_answer)}')
-            if len(rec_tag_list) != 10:
+            if len(rec_tag_list) != 20:
                 print(f'tag sz : {len(rec_tag_list)}')
 
             answers.append({
