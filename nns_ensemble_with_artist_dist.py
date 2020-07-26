@@ -62,13 +62,32 @@ class GenreMostPopular:
         song_lists = []
         title_lists = []
         year_month_lists = []
+
+        tag_to_indexes = dict()
+        song_to_indexes = dict()
+        title_to_indexes = dict()
+
         train = sorted(train, key=lambda x: x['id'])
-        for t in train:
+        for cnt, t in enumerate(train):
             # print(t)
             tag_lists.append(set(t['tags']))
             song_lists.append(set(t['songs']))
-            # title_lists.append(t['plylst_title'].split(' '))
+
+            for tag in t['tags']:
+                if tag not in tag_to_indexes.keys():
+                    tag_to_indexes[tag] = set()
+                tag_to_indexes[tag].add(cnt)
+            for song in t['songs']:
+                if song not in song_to_indexes.keys():
+                    song_to_indexes[song] = set()
+                song_to_indexes[song].add(cnt)
+
             words = get_words(t['plylst_title'])
+            for word in words:
+                if word not in title_to_indexes.keys():
+                    title_to_indexes[word] = set()
+                title_to_indexes[word].add(cnt)
+
             title_lists.append(words)
             for word in words:
                 most_popular_words[word] += 1
@@ -76,7 +95,7 @@ class GenreMostPopular:
             year_month_score = (cur_date.year * 12) + (cur_date.month - 1)
             year_month_lists.append(year_month_score)
 
-        return song_lists, tag_lists, title_lists, year_month_lists
+        return song_lists, tag_lists, song_to_indexes, tag_to_indexes, title_to_indexes, title_lists, year_month_lists
 
     def _get_song_recommends(self, song_sets, my_songs, sorted_list, my_artists_counter, my_genres_counter, song_meta,
                              cur_date, K_NN):
@@ -193,7 +212,73 @@ class GenreMostPopular:
             return_dict = dict()
 
         song_meta = {int(song["id"]): song for song in song_meta_json}
-        song_sets, tag_sets, title_lists, year_month_lists = self._train_playlist(train)
+        song_sets, tag_sets, song_to_indexes, tag_to_indexes, title_to_indexes, title_lists, year_month_lists = self._train_playlist(train)
+
+        base_playlist_scores = dict()
+        for i in range(len(train)):
+            base_playlist_scores[i] = 0.0
+
+        # start koo
+        artist_id = dict()
+        artist_name = dict()
+        artist_mopop_tmp = dict()
+        artist_mopop = dict()
+        artist_name_cnt = list()
+        artist_name_cnt_tmp = list()
+        artist_name_cnt_threshold = 1000
+
+        for i in tqdm(song_meta_json):
+            if len(i['artist_id_basket']) == len(i['artist_name_basket']):
+                for idx, name in enumerate(i['artist_name_basket']):
+                    artist_id[i['artist_id_basket'][idx]] = name.lower()
+                    if len(name) > 5 and name[-1] == ')':
+                        for p in range(len(name)):
+                            if name[p] == '(':
+                                if name[p - 1] == ' ':
+                                    artist_name[name[:p - 1].lower()] = i['artist_id_basket'][idx]
+                                else:
+                                    artist_name[name[:p].lower()] = i['artist_id_basket'][idx]
+                                artist_name[name[p + 1:-1].lower()] = i['artist_id_basket'][idx]
+                                break
+                    artist_name[name.lower()] = i['artist_id_basket'][idx]
+                    if name.lower() not in artist_mopop_tmp:
+                        artist_mopop_tmp[name.lower()] = list()
+                    artist_mopop_tmp[name.lower()].append(i['id'])
+
+        for i in tqdm(questions + train):
+            for s in i['songs']:
+                for name in song_meta_json[s]['artist_name_basket']:
+                    artist_name_cnt_tmp.append(name.lower())
+                    if name.lower() in artist_mopop_tmp:
+                        artist_mopop_tmp[name.lower()].append(s)
+
+        for name, cnt in tqdm(artist_mopop_tmp.items()):
+            cnt = Counter(cnt)
+            tmp_list = list()
+            for key, value in cnt.items():
+                tmp_list.append((key, value))
+            cnt = sorted(tmp_list, reverse=True, key=lambda x: x[1])
+            tmp_list = list()
+            for v in cnt:
+                tmp_list.append(v[0])
+            artist_mopop[name] = tmp_list
+
+        artist_name_cnt_tmp = Counter(artist_name_cnt_tmp)
+        for key, value in artist_name_cnt_tmp.items():
+            if value >= artist_name_cnt_threshold and len(key) > 1:
+                if len(key) > 5 and key[-1] == ')':
+                    for p in range(len(key)):
+                        if key[p] == '(':
+                            if key[p - 1] == ' ':
+                                artist_name_cnt.append(key[:p - 1].lower())
+                            else:
+                                artist_name_cnt.append(key[:p].lower())
+                            artist_name_cnt.append(key[p + 1:-1].lower())
+                            break
+                artist_name_cnt.append(key.lower())
+
+        except_list = ['클래식', '라디', '구름', '노을']
+        # end koo
 
         answers = []
 
@@ -209,6 +294,7 @@ class GenreMostPopular:
                 tag_only = True
 
             my_title = get_words(q['plylst_title'])
+            my_title_2 = q['plylst_title']
             for word in my_title:
                 most_popular_words[word] += 1
             my_artists_counter = Counter()
@@ -220,78 +306,81 @@ class GenreMostPopular:
                 cur_genres = song_meta[song]['song_gn_dtl_gnr_basket']
                 my_genres_counter.update(cur_genres)
 
+            ###################################################
+            song_size = 0
+            singer_list = list()
+            answer_list = list()
+            singer_id_list = list()
+            for song in my_songs:
+                song_size += 1
+                for name in song_meta[song]['artist_name_basket']:
+                    singer_list.append(name.lower())
+                for sid in song_meta[song]['artist_id_basket']:
+                    singer_id_list.append(sid)
+            singer_list = Counter(singer_list)
+            for key, value in singer_list.items():
+                if song_size >= 5 and song_size * 0.8 <= value:
+                    if key.lower() in artist_mopop:
+                        answer_list = artist_mopop[key.lower()].copy()
+
+            if len(my_title_2) > 1:
+                for name in artist_name_cnt:
+                    if len(name) > 1 and (name.lower() in my_title_2.lower()) and (name.lower() not in except_list):
+                        if len(singer_id_list) > 0 and (artist_name[name] not in singer_id_list):
+                            continue
+                        # print(name, my_title)
+                        for song in artist_mopop[artist_id[artist_name[name.lower()]]]:
+                            answer_list.append(song)
+            ###################################################
             sorted_list = []
+            play_list_scores = base_playlist_scores.copy()
 
-            for idx, song_set in enumerate(song_sets):
-                play_list_score = 0
+            for song in my_songs:
+                if song in song_to_indexes.keys():
+                    for idx in song_to_indexes[song]:
+                        play_list_scores[idx] += (15 / (math.log(len(song_sets[idx]) + 1)))
 
-                songs_score = 0
-                for song in my_songs:
-                    if song in song_set:
-                        songs_score += 1
+            for tag in my_tags:
+                if tag in tag_to_indexes.keys():
+                    for idx in tag_to_indexes[tag]:
+                        play_list_scores[idx] += (6 / (math.log(len(tag_sets[idx]) + 1)))
 
-                if len(song_set) != 0:
-                    songs_score = songs_score / (math.log(len(song_set) + 1))
+            for word in my_title:
+                if word in title_to_indexes.keys():
+                    for idx in title_to_indexes[word]:
+                        play_list_scores[idx] += (3 / (math.log(len(title_lists[idx]) + 1)))
 
-                play_list_score += 15 * songs_score
-
-                tag_score = 0
-                for tag_q in my_tags:
-                    for tag_t in tag_sets[idx]:
-                        if tag_t == tag_q:
-                            tag_score += 1
-
-                if len(tag_sets[idx]) != 0:
-                    tag_score = tag_score / (math.log(len(tag_sets[idx]) + 1))
-                play_list_score += 6 * tag_score
-
-                title_score = 0
-                for word in my_title:
-                    if (word in title_lists[idx]) and (word not in filtered_word):
-                        most_intersect_words[word] += 1
-                        title_score += 1
-
-                if len(title_lists[idx]) != 0:
-                    title_score = title_score / (math.log(len(title_lists[idx]) + 1))
-
-                play_list_score += 3 * title_score
-
-                # print(f'before_play_list_score : {play_list_score}')
+            for idx, t in enumerate(year_month_lists):
                 trend_penalty = pow(abs(year_month_lists[idx] - year_month_score), 2) * (1e-3)
-                play_list_score -= trend_penalty
+                play_list_scores[idx] -= trend_penalty
 
-                # print(f'penalty : {trend_penalty}, after_play_list_score : {play_list_score}')
-
-                sorted_list.append([play_list_score, idx, songs_score, tag_score, title_score])
+            for k, v in play_list_scores.items():
+                sorted_list.append((v, k))
 
             sorted_list.sort(key=lambda x: (x[0], x[1]), reverse=True)
 
-            mean_tag = 0
-            mean_music = 0
-            mean_title = 0
-            K_NN = 10
-            for i in range(K_NN):
-                mean_music += sorted_list[i][2]
-                mean_tag += sorted_list[i][3]
-                mean_title += sorted_list[i][4]
-
-            result_df.loc[len(result_df)] = [id, mean_music / K_NN, mean_tag / K_NN, mean_title / K_NN]
-
-            # if best_3_mean<1.5:
-            #     more_search=1
             rec_song_list = self._get_song_recommends(song_sets, my_songs, sorted_list, my_artists_counter,
                                                       my_genres_counter, song_meta, cur_date, 10)
             rec_tag_list = self._get_tag_recommends(tag_sets, my_tags, sorted_list, 30)
 
+            real_answer = list()
+            for s in answer_list:
+                if (s not in my_songs) and (s not in real_answer) and q['updt_date'] > song_meta_json[s]['issue_date']:
+                    real_answer.append(s)
+            for s in rec_song_list:
+                if (s not in my_songs) and (s not in real_answer):
+                    real_answer.append(s)
+            real_answer = real_answer[:100]
+
             more_search = 3
             if len(rec_song_list) != 100:
-                print(f'song sz : {len(rec_song_list)}')
+                print(f'song sz : {len(real_answer)}')
             if len(rec_tag_list) != 10:
                 print(f'tag sz : {len(rec_tag_list)}')
 
             answers.append({
                 "id": q["id"],
-                "songs": rec_song_list,
+                "songs": real_answer,
                 "tags": rec_tag_list
             })
         return_dict[p_idx] = answers

@@ -8,7 +8,7 @@ from arena_util import load_json
 from arena_util import write_json
 import pandas as pd
 
-NUM_CORE = 6
+NUM_CORE = 8
 
 class MultiprocessSolver:
     def _song_mp_per_genre(self, song_meta, global_mp):
