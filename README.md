@@ -12,10 +12,10 @@
 
 ```bash
 $> python run.py run \
-	--song_meta_fname=res/song_meta.json \
-	--train_fname=arena_data/orig/train.json \
 	--question_fname=arena_data/questions/val.json \
-	--genre_fname=res/genre_gn_all.json
+	--song_meta_fname=res/song_meta.json \
+	--genre_fname=res/genre_gn_all.json \
+	--train_fname=arena_data/orig/train.json
 ```
 
 그 밖에 사용할 수 있는 옵션은 다음과 같습니다:
@@ -33,12 +33,12 @@ $> python run.py run \
 
 ```bash
 $> python run.py run \
+	--question_fname=res/val.json \
 	--song_meta_fname=res/song_meta.json \
+	--genre_fname=res/genre_gn_all.json \
 	--train_fname=res/train.json \
 	--val_fname=res/val.json \
 	--test_fname=res/test.json \
-	--question_fname=res/val.json \
-	--genre_fname=res/genre_gn_all.json \
 	--jobs=6
 ```
 
@@ -48,12 +48,12 @@ $> python run.py run \
 
 ```bash
 $> python run.py run \
+	--question_fname=res/test.json \
 	--song_meta_fname=res/song_meta.json \
+	--genre_fname=res/genre_gn_all.json \
 	--train_fname=res/train.json \
 	--val_fname=res/val.json \
 	--test_fname=res/test.json \
-	--question_fname=res/test.json \
-	--genre_fname=res/genre_gn_all.json \
 	--jobs=6
 ```
 
