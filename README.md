@@ -19,7 +19,7 @@ $> python run.py run \
 ```
 
 그 밖에 사용할 수 있는 옵션은 다음과 같습니다:
-  - `--jobs=6`:
+  - `--jobs=8`:
       	멀티프로세싱을 사용합니다.
 		메모리가 더 많이 요구되지만 시간이 단축됩니다.
 		윈도우 환경에서 그래프 모델은 멀티프로세싱을 사용할 수 없습니다.
@@ -39,7 +39,7 @@ $> python run.py run \
 	--test_fname=res/test.json \
 	--question_fname=res/val.json \
 	--genre_fname=res/genre_gn_all.json \
-	--jobs=6
+	--jobs=8
 ```
 
 ### 파이널 리더보드용 문제 예측 예시
@@ -54,7 +54,7 @@ $> python run.py run \
 	--test_fname=res/test.json \
 	--question_fname=res/test.json \
 	--genre_fname=res/genre_gn_all.json \
-	--jobs=6
+	--jobs=8
 ```
 
 
