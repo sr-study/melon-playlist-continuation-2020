@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import fire
 import numpy as np
 
@@ -20,13 +19,17 @@ class ArenaEvaluator:
 
         return dcg / self._idcgs[len(gt)]
 
-    def _eval(self, gt_fname, rec_fname):
+    def _eval(self, gt_fname, rec_fname, rec_full_fname):
         gt_playlists = load_json(gt_fname)
         gt_dict = {g["id"]: g for g in gt_playlists}
         rec_playlists = load_json(rec_fname)
 
+        rec_question = load_json(rec_full_fname)
+        q_dict = {g["id"]: g for g in rec_question}
+
         gt_ids = set([g["id"] for g in gt_playlists])
         rec_ids = set([r["id"] for r in rec_playlists])
+
 
         if gt_ids != rec_ids:
             raise Exception("결과의 플레이리스트 수가 올바르지 않습니다.")
@@ -52,23 +55,76 @@ class ArenaEvaluator:
         music_ndcg = 0.0
         tag_ndcg = 0.0
 
+        case_music = [0.0, 0.0, 0.0, 0.0]
+        case_tag = [0.0, 0.0, 0.0, 0.0]
+        case_count =[0, 0, 0, 0]
+
+        def check_case (id):
+            tag_len =len(q_dict[id]['tags'])
+            song_len = len(q_dict[id]['songs'])
+            title_len = len(q_dict[id]['plylst_title'])
+
+            #song
+            if song_len!=0 and tag_len ==0 and title_len==0:
+                return 0
+            #song tag
+            if song_len!=0 and tag_len !=0 and title_len==0:
+                return 1
+            #tag title
+            if song_len==0 and tag_len !=0 and title_len!=0:
+                return 2
+            #title
+            if song_len==0 and tag_len ==0 and title_len!=0:
+                return 3
+
+
         for rec in rec_playlists:
+
             gt = gt_dict[rec["id"]]
-            music_ndcg += self._ndcg(gt["songs"], rec["songs"][:100])
-            tag_ndcg += self._ndcg(gt["tags"], rec["tags"][:10])
+            cur_music_ndcg = self._ndcg(gt["songs"], rec["songs"][:100])
+            cur_tag_ndcg = self._ndcg(gt["tags"], rec["tags"][:10])
+            music_ndcg += cur_music_ndcg
+            tag_ndcg += cur_tag_ndcg
+
+            case_id =check_case(rec['id'])
+            case_music[case_id] += cur_music_ndcg
+            case_tag[case_id] += cur_tag_ndcg
+            case_count[case_id] += 1
+
+
+        for idx in range(4):
+            case_music[idx]=case_music[idx]/case_count[idx]
+            case_tag[idx] =case_tag[idx]/case_count[idx]
 
         music_ndcg = music_ndcg / len(rec_playlists)
         tag_ndcg = tag_ndcg / len(rec_playlists)
         score = music_ndcg * 0.85 + tag_ndcg * 0.15
 
-        return music_ndcg, tag_ndcg, score
+        return music_ndcg, tag_ndcg, score ,case_music, case_tag
 
-    def evaluate(self, gt_fname, rec_fname):
+    def evaluate(self):
         try:
-            music_ndcg, tag_ndcg, score = self._eval(gt_fname, rec_fname)
+            gt_fname = 'arena_data/answers/val.json'
+            rec_fname = 'arena_data/results/results.json'
+            rec_full_fname= 'arena_data/questions/val.json'
+            music_ndcg, tag_ndcg, score, case_music, case_tag = self._eval(gt_fname, rec_fname,rec_full_fname)
+            print('Total score')
             print(f"Music nDCG: {music_ndcg:.6}")
             print(f"Tag nDCG: {tag_ndcg:.6}")
             print(f"Score: {score:.6}")
+
+            case_titles =['song only','song tag','tag title','title only']
+            for idx , case_title in enumerate(case_titles):
+                print(f'#### {case_title}')
+                print(f"Music nDCG: {case_music[idx]:.6}")
+                print(f"Tag nDCG: {case_tag[idx]:.6}")
+
+
+
+
+
+
+
         except Exception as e:
             print(e)
 
