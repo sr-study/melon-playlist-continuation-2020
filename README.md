@@ -23,7 +23,7 @@ $> python run.py run \
       	멀티프로세싱을 사용합니다.
 		메모리가 더 많이 요구되지만 시간이 단축됩니다.
 		윈도우 환경에서 그래프 모델은 멀티프로세싱을 사용할 수 없습니다.
-  - `--train_fname2=res/val.json --train_fname3=res/test.json`:
+  - `--val_fname=res/val.json --test_fname=res/test.json`:
         여러 train을 병합하여 학습데이터로 사용합니다.
 		두 파일이 모두 명시되야 작동하며, 그래프 모델에만 적용됩니다.
 
@@ -35,8 +35,8 @@ $> python run.py run \
 $> python run.py run \
 	--song_meta_fname=res/song_meta.json \
 	--train_fname=res/train.json \
-	--train_fname2=res/val.json \
-	--train_fname3=res/test.json \
+	--val_fname=res/val.json \
+	--test_fname=res/test.json \
 	--question_fname=res/val.json \
 	--genre_fname=res/genre_gn_all.json \
 	--jobs=6
@@ -50,8 +50,8 @@ $> python run.py run \
 $> python run.py run \
 	--song_meta_fname=res/song_meta.json \
 	--train_fname=res/train.json \
-	--train_fname2=res/val.json \
-	--train_fname3=res/test.json \
+	--val_fname=res/val.json \
+	--test_fname=res/test.json \
 	--question_fname=res/test.json \
 	--genre_fname=res/genre_gn_all.json \
 	--jobs=6

@@ -16,10 +16,11 @@ RUNNING_IN_WINDOWS = os.name == 'nt'
 
 
 class Recommend:
-    def run(self, song_meta_fname, train_fname, question_fname, genre_fname, train_fname2=None, train_fname3=None, jobs=1):
-        wanna_use_merged_train = (train_fname2 is not None) and (train_fname3 is not None)
+    def run(self, song_meta_fname, train_fname, question_fname, genre_fname, val_fname=None, test_fname=None, jobs=1):
+        wanna_use_merged_train = (val_fname is not None) and (test_fname is not None)
         if wanna_use_merged_train:
-            self.merge_trains([train_fname, train_fname2, train_fname3], MERGED_TRAIN_FNAME)
+            # self.merge_trains([train_fname, val_fname, test_fname], MERGED_TRAIN_FNAME)
+            self.reproduce_train(train_fname, val_fname, test_fname, MERGED_TRAIN_FNAME)
 
         graph_train_fname = MERGED_TRAIN_FNAME if wanna_use_merged_train else train_fname
         graph_jobs = 1 if RUNNING_IN_WINDOWS else jobs
@@ -52,6 +53,18 @@ class Recommend:
             merged_train += load_json(train_fname)
 
         write_json(merged_train, output_fname)
+
+    # 제출 재현용 코드
+    # 원래는 merge_trains()만 호출하면 더 좋지만, 제출 당시 사용한 인풋을
+    # 재현하기 위해 split 하는 코드를 추가...
+    def reproduce_train(self, train_fname, val_fname, test_fname, output_fname):
+        from graph.split_data import ArenaSplitter
+
+        splitter = ArenaSplitter()
+        splitter.run(train_fname, 0.002, suffix='0002')
+        train_fname = './arena_data/orig/train0002.json'
+
+        self.merge_trains([train_fname, val_fname, test_fname], output_fname)
 
 
 if __name__ == "__main__":
